@@ -3434,19 +3434,25 @@ end
 --
 function keybinds:set(key)
 	if key then
-		if typeof(key) == "EnumItem" or typeof(key) == "table" then
-			if typeof(key) == "table" then
-				if key[1] and key[2] then
+		-- 1. Если пришла таблица (из конфига), превращаем её обратно в Enum
+		if typeof(key) == "table" then
+			if key[1] and key[2] then
+				local s, e = pcall(function()
 					key = Enum[key[1]][key[2]]
-				else
-					return
-				end
+				end)
+				if not s then return end -- Если ошибка конвертации, выходим
+			else
+				return
 			end
+		end
+
+		-- 2. Теперь работаем как с нормальным EnumItem
+		if typeof(key) == "EnumItem" then
 			local keybind = self
 			local typeis = ""
-			--
 			local default = ".."
-			--
+
+			-- Определяем текст (MB1, MB2 или буква)
 			if key == Enum.UserInputType.MouseButton1 then
 				if keybind.allowed == 1 then
 					default = "MB1"
@@ -3471,18 +3477,25 @@ function keybinds:set(key)
 				end
 				typeis = "KeyCode"
 			end
-			--
+
+			-- Обновляем текст кнопки
 			keybind.value.Text = default
-			keybind.current = {typeis,utility.splitenum(key)}
-			keybind.callback(keybind.current)
-			keybind.outline.Size = UDim2.new(0,keybind.value.TextBounds.X+20,1,0)
-			--
+			keybind.outline.Size = UDim2.new(0, keybind.value.TextBounds.X+20, 1, 0)
+			
+			-- В память (для сохранения) пишем таблицу
+			keybind.current = {typeis, utility.splitenum(key)}
+			
+			-- !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ !!!
+			-- В callback отдаем ЧИСТЫЙ KEY (EnumItem), чтобы скрипт понял его
+			keybind.callback(key) 
+
+			-- Снимаем выделение, если кнопка была нажата
 			if keybind.down then
 				keybind.down = false
 				keybind.outline.BorderColor3 = Color3.fromRGB(12, 12, 12)
-				local find = table.find(self.library.themeitems["accent"]["BorderColor3"],keybind.outline)
+				local find = table.find(self.library.themeitems["accent"]["BorderColor3"], keybind.outline)
 				if find then
-					table.remove(self.library.themeitems["accent"]["BorderColor3"],find)
+					table.remove(self.library.themeitems["accent"]["BorderColor3"], find)
 				end
 			end
 		end
