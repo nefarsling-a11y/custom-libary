@@ -838,51 +838,57 @@ function watermarks:toggle(bool)
 end
 --
 function library:saveconfig(folder_name, config_name)
-	if not isfolder(folder_name) then makefolder(folder_name) end
-	local cfg = {}
-	for i,v in pairs(self.pointers) do
-		cfg[i] = {}
-		for c,d in pairs(v) do
-			cfg[i][c] = {}
-			for x,z in pairs(d) do
-				if typeof(z.current) == "Color3" then
-					cfg[i][c][x] = {z.current.R, z.current.G, z.current.B, "Color3"} -- Метка цвета
-				else
-					cfg[i][c][x] = z.current
-				end
-			end
-		end
-	end
-	
-	local success, err = pcall(function()
-		writefile(folder_name.."/"..config_name..".cfg", hs:JSONEncode(cfg))
-	end)
-	if success then self:Notification({Title="Success", Description="Config saved: "..config_name}) 
-	else self:Notification({Title="Error", Description="Save failed: "..tostring(err)}) end
+    if not isfolder(folder_name) then makefolder(folder_name) end
+    
+    local cfg = {}
+    -- Берем указатели напрямую из библиотеки, игнорируя секции
+    for name, element in pairs(self.pointers) do
+        if element.current ~= nil then
+            if typeof(element.current) == "Color3" then
+                cfg[name] = {element.current.R, element.current.G, element.current.B, "Color3"}
+            else
+                cfg[name] = element.current
+            end
+        end
+    end
+
+    local success, err = pcall(function()
+        writefile(folder_name.."/"..config_name..".cfg", hs:JSONEncode(cfg))
+    end)
+    
+    if success then 
+        self:Notification({Title="Config Saved", Description="Saved: "..config_name, Time=3}) 
+    else 
+        self:Notification({Title="Error", Description="Save failed: "..tostring(err)}) 
+    end
 end
 
 function library:loadconfig(folder_name, config_name)
-	local path = folder_name.."/"..config_name..".cfg"
-	if not isfile(path) then self:Notification({Title="Error", Description="Config not found!"}) return end
+    local path = folder_name.."/"..config_name..".cfg"
+    if not isfile(path) then 
+        self:Notification({Title="Error", Description="Config not found!"}) 
+        return 
+    end
 
-	local success, err = pcall(function()
-		local cfg = hs:JSONDecode(readfile(path))
-		for i,v in pairs(cfg) do
-			for c,d in pairs(v) do
-				for x,z in pairs(d) do
-					if self.pointers[i] and self.pointers[i][c] and self.pointers[i][c][x] then
-						if typeof(z) == "table" and z[4] == "Color3" then
-							self.pointers[i][c][x]:set(Color3.new(z[1], z[2], z[3]))
-						else
-							self.pointers[i][c][x]:set(z)
-						end
-					end
-				end
-			end
-		end
-	end)
-	if success then self:Notification({Title="Success", Description="Config loaded: "..config_name}) 
-	else self:Notification({Title="Error", Description="Load failed: "..tostring(err)}) end
+    local success, err = pcall(function()
+        local cfg = hs:JSONDecode(readfile(path))
+        for name, value in pairs(cfg) do
+            if self.pointers[name] then
+                local element = self.pointers[name]
+                if typeof(value) == "table" and value[4] == "Color3" then
+                    element:set(Color3.new(value[1], value[2], value[3]))
+                else
+                    element:set(value)
+                end
+            end
+        end
+    end)
+
+    if success then 
+        self:Notification({Title="Config Loaded", Description="Loaded: "..config_name, Time=3}) 
+    else 
+        self:Notification({Title="Error", Description="Load failed: "..tostring(err)}) 
+    end
 end
 --
 function library:settheme(theme,color)
@@ -1144,7 +1150,7 @@ function library:page(props)
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
 	--
 	if pointer then
-		self.pointers[tostring(pointer)] = page.pointers
+		self.library.pointers[tostring(pointer)] = page.pointers
 	end
 	--
 	self.labels[#self.labels+1] = label
@@ -1273,7 +1279,7 @@ function pages:section(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = section.pointers
+			self.library.pointers[tostring(pointer)] = section.pointers
 		end
 	end
 	--
@@ -1423,7 +1429,7 @@ function pages:multisection(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = multisection.pointers
+			self.library.pointers[tostring(pointer)] = multisection.pointers
 		end
 	end
 	--
@@ -1589,7 +1595,7 @@ function multisections:section(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = mssection.pointers
+			self.library.pointers[tostring(pointer)] = mssection.pointers
 		end
 	end
 	--
@@ -1715,7 +1721,7 @@ function sections:toggle(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = toggle
+			self.library.pointers[tostring(pointer)] = toggle
 		end
 	end
 	--
@@ -2043,7 +2049,7 @@ function sections:slider(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = slider
+			self.library.pointers[tostring(pointer)] = slider
 		end
 	end
 	--
@@ -2392,7 +2398,7 @@ function sections:dropdown(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = dropdown
+			self.library.pointers[tostring(pointer)] = dropdown
 		end
 	end
 	--
@@ -2636,7 +2642,7 @@ function sections:buttonbox(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = buttonbox
+			self.library.pointers[tostring(pointer)] = buttonbox
 		end
 	end
 	--
@@ -2972,7 +2978,7 @@ function sections:multibox(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = multibox
+			self.library.pointers[tostring(pointer)] = multibox
 		end
 	end
 	--
@@ -3176,7 +3182,7 @@ function sections:textbox(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = textbox
+			self.library.pointers[tostring(pointer)] = textbox
 		end
 	end
 	--
@@ -3415,7 +3421,7 @@ function sections:keybind(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = keybind
+			self.library.pointers[tostring(pointer)] = keybind
 		end
 	end
 	--
@@ -4099,7 +4105,7 @@ function sections:colorpicker(props)
 	--
 	if pointer then
 		if self.pointers then
-			self.pointers[tostring(pointer)] = colorpicker
+			self.library.pointers[tostring(pointer)] = colorpicker
 		end
 	end
 	--
