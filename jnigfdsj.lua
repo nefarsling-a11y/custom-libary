@@ -26,7 +26,6 @@ local ts = game:GetService("TweenService")
 local uis = game:GetService("UserInputService")
 local hs = game:GetService("HttpService")
 local ws = game:GetService("Workspace")
-local textService = game:GetService("TextService") -- Добавлено для фикса тултипа
 local plr = plrs.LocalPlayer
 local cam = ws.CurrentCamera
 -- // indexes
@@ -53,8 +52,8 @@ utility.new = function(instance,properties)
 	for property,value in pairs(properties) do
 		ins[property] = value
 	end
-	
-	-- // FIX: Запоминаем прозрачность при создании объекта, чтобы при открытии меню она восстанавливалась правильно
+
+	-- // FIX: Запоминаем прозрачность при создании объекта
 	if ins:IsA("Frame") or ins:IsA("ScrollingFrame") or ins:IsA("ImageLabel") or ins:IsA("ImageButton") then
 		ins:SetAttribute("OriginalTransparency", ins.BackgroundTransparency)
 	end
@@ -327,9 +326,7 @@ function library:new(props)
 	--
 	utility.dragify(title,outline)
 	--
-	-- // REMOVED CURSOR CODE (Requested by user)
-	--
-	-- // TOOLTIP
+	-- // TOOLTIP (Фикс расчета размера)
 	local tooltipFrame = utility.new(
 		"Frame",
 		{
@@ -433,7 +430,7 @@ function library:new(props)
 	local cooldown = false
 	local saved = outline.Position
 	--
-	-- // TOOLTIP FUNCTIONS (FIXED)
+	-- // TOOLTIP FUNCTIONS (ИСПОЛЬЗУЕМ МЕТОД БЕЗ TextService)
 	local function showTooltip(text, element)
 		tooltipCurrentElement = element
 		tooltipHoverStart = tick()
@@ -446,36 +443,32 @@ function library:new(props)
 							currentTooltipTween:Cancel()
 						end
 						
-						tooltipText.Text = text or "N/A"
-						
-						-- FIX: Правильный расчет размера тултипа
-						local params = Instance.new("GetTextBoundsParams")
-						params.Text = text or "N/A"
-						params.Font = Font.fromEnum(Enum.Font[font] or Enum.Font.RobotoMono)
-						params.Size = textsize
-						params.Width = tooltipMaxWidth - 10 -- Учитываем отступы
-						
-						local bounds
-						pcall(function()
-							bounds = textService:GetTextSize(text or "N/A", textsize, Enum.Font[font] or Enum.Font.RobotoMono, Vector2.new(tooltipMaxWidth - 10, 1000))
-						end)
-						
-						if not bounds then bounds = Vector2.new(100, 20) end
-
-						local width = math.min(tooltipMaxWidth, bounds.X + 16)
-						local height = bounds.Y + 10
-						
-						tooltipFrame.Size = UDim2.new(0, width, 0, height)
+						-- Подготовка
+						tooltipFrame.Visible = true
 						tooltipFrame.BackgroundTransparency = 1
 						tooltipText.TextTransparency = 1
 						tooltipAccent.BackgroundTransparency = 1
-						tooltipFrame.Visible = true
-						tooltipVisible = true
+						tooltipText.Text = text or "N/A"
 						
-						-- Позиционирование рядом с мышкой
+						-- Расчет размера через свойства лейбла (самый надежный способ)
+						-- Растягиваем лейбл, чтобы он посчитал высоту с переносом
+						tooltipText.Size = UDim2.new(0, tooltipMaxWidth - 10, 0, 1000) 
+						local bounds = tooltipText.TextBounds
+						
+						-- Устанавливаем итоговый размер рамки
+						local width = math.min(tooltipMaxWidth, bounds.X + 16)
+						local height = bounds.Y + 10
+						tooltipFrame.Size = UDim2.new(0, width, 0, height)
+						
+						-- Возвращаем нормальный размер текста внутри рамки
+						tooltipText.Size = UDim2.new(1, -10, 1, -6)
+						
+						-- Позиционирование
 						local mouse = uis:GetMouseLocation()
 						tooltipFrame.Position = UDim2.new(0, mouse.X + 15, 0, mouse.Y - 5)
+						tooltipVisible = true
 
+						-- Анимация появления
 						currentTooltipTween = ts:Create(tooltipFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0})
 						currentTooltipTween:Play()
 						ts:Create(tooltipText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
@@ -504,7 +497,7 @@ function library:new(props)
 	window.showTooltip = showTooltip
 	window.hideTooltip = hideTooltip
 	--
-	-- // UPDATE LOOP FOR TOOLTIP POS (Cursor lines removed)
+	-- // UPDATE LOOP FOR TOOLTIP POS
 	rs.RenderStepped:Connect(function()
 		if window.windowVisible and screen.Enabled then
 			if tooltipVisible then
@@ -559,7 +552,6 @@ function library:new(props)
 						outline.Position = startPos
 						outline.BackgroundTransparency = 1
 						
-						-- Подготовка к анимации (делаем все невидимым, чтобы не мигало)
 						for _, desc in ipairs(outline:GetDescendants()) do
 							if desc:IsA("Frame") then
 								desc.BackgroundTransparency = 1
@@ -579,7 +571,6 @@ function library:new(props)
 						
 						for _, desc in ipairs(outline:GetDescendants()) do
 							if desc:IsA("Frame") then
-								-- FIX: Используем OriginalTransparency, установленный в utility.new
 								local origTrans = desc:GetAttribute("OriginalTransparency") or 0
 								ts:Create(desc, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = origTrans}):Play()
 							elseif desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
