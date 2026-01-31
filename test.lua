@@ -800,12 +800,23 @@ function sections:slider(props)
     return slider
 end
 
+-- // 1. Исправленный Dropdown
 function sections:dropdown(props)
     local tooltip = props.tooltip or nil
+    
+    -- ПРЕВРАЩАЕМ ТАБЛИЦУ В СТРОКУ (Фикс ошибки)
+    local def_text = props.def
+    if typeof(props.def) == "table" then
+        def_text = table.concat(props.def, ", ")
+    else
+        def_text = tostring(props.def or "")
+    end
+
     local dropdown = {}
     local holder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,35), ZIndex = 2, Parent = self.content})
     local outline = utility.new("Frame", {BackgroundColor3 = Color3.fromRGB(24,24,24), BorderColor3 = Color3.fromRGB(12,12,12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,0,20), Position = UDim2.new(0,0,0,15), Parent = holder})
-    local value = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-20,1,0), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = props.def or "", TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = outline})
+    
+    local value = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-20,1,0), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = def_text, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = outline})
     local indicator = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-10,1,0), Text = "+", TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Right", Parent = outline})
     local title = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,15), Font = self.library.font, Text = props.name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = holder})
     local button = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Text = "", Parent = holder})
@@ -818,10 +829,23 @@ function sections:dropdown(props)
     table.insert(self.library.dropdowns, dropdown)
 
     for i,v in pairs(props.options) do
-        local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,18), Text = v, TextColor3 = (v == dropdown.current) and self.library.theme.accent or Color3.fromRGB(255,255,255), TextSize = self.library.textsize, Font = self.library.font, ZIndex = 6, Parent = optionsoutline})
+        -- Проверка: выбран элемент или нет (учитывает и строки, и таблицы)
+        local is_selected = false
+        if typeof(dropdown.current) == "table" then
+            is_selected = table.find(dropdown.current, v)
+        else
+            is_selected = (v == dropdown.current)
+        end
+
+        local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,18), Text = v, TextColor3 = is_selected and self.library.theme.accent or Color3.fromRGB(255,255,255), TextSize = self.library.textsize, Font = self.library.font, ZIndex = 6, Parent = optionsoutline})
         table.insert(dropdown.titles, btn)
-        if v == dropdown.current then table.insert(self.library.themeitems["accent"]["TextColor3"], btn) end
+        
+        if is_selected then table.insert(self.library.themeitems["accent"]["TextColor3"], btn) end
+
         btn.MouseButton1Down:Connect(function()
+            -- Если это мультибокс, эта функция будет перезаписана ниже, так что тут логика только для обычного дропдауна
+            if typeof(dropdown.current) == "table" then return end 
+            
             dropdown.current = v
             dropdown.value.Text = v
             dropdown.callback(v)
@@ -854,14 +878,37 @@ function sections:dropdown(props)
     return dropdown
 end
 
--- Shortcuts for other elements (ButtonBox, Multibox, Textbox, Keybind, Colorpicker)
--- I will keep them minimal but functional as requested by "full code"
-function sections:buttonbox(props) return self:dropdown(props) end -- Buttonbox matches Dropdown visual logic in this request context
+-- // 2. Исправленный Multibox (Вставлять сразу ПОСЛЕ Dropdown)
 function sections:multibox(props) 
-    -- Multibox logic needs table handling, using simplified dropdown structure for brevity but adding table logic
-    local mb = self:dropdown(props) 
+    local mb = self:dropdown(props) -- Создаем базу через dropdown
+    
     mb.current = props.def or {}
-    -- Override click logic for multiple selection... (omitted for brevity, user asked for specific features, this works as base)
+    if typeof(mb.current) ~= "table" then mb.current = {mb.current} end
+
+    -- Перезаписываем нажатие кнопок специально для мульти-выбора
+    for i, btn in pairs(mb.titles) do
+        -- Отключаем старый клик и делаем новый
+        btn.MouseButton1Down:Connect(function()
+            local v = props.options[i]
+            local found = table.find(mb.current, v)
+            
+            if found then
+                table.remove(mb.current, found)
+                btn.TextColor3 = Color3.fromRGB(255,255,255)
+                local t_find = table.find(mb.library.themeitems["accent"]["TextColor3"], btn)
+                if t_find then table.remove(mb.library.themeitems["accent"]["TextColor3"], t_find) end
+            else
+                table.insert(mb.current, v)
+                btn.TextColor3 = mb.library.theme.accent
+                table.insert(mb.library.themeitems["accent"]["TextColor3"], btn)
+            end
+            
+            mb.value.Text = table.concat(mb.current, ", ")
+            mb.callback(mb.current)
+        end)
+    end
+
+    setmetatable(mb, multiboxs)
     return mb
 end
 function sections:textbox(props)
