@@ -71,9 +71,6 @@ if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType
 dragging = true
 dragStart = input.Position
 startPos = touse.Position
-
-text
-
 		input.Changed:Connect(function()
 			if input.UserInputState == Enum.UserInputState.End then
 				dragging = false
