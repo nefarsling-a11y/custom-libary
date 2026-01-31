@@ -130,18 +130,12 @@ utility.removespaces = function(s)
 end
 -- // main
 function library:new(props)
-	-- // properties
 	local textsize = props.textsize or props.TextSize or props.textSize or props.Textsize or 12
 	local font = props.font or props.Font or "RobotoMono"
 	local name = props.name or props.Name or props.UiName or props.Uiname or props.uiName or props.username or props.Username or props.UserName or props.userName or "new ui"
 	local color = props.color or props.Color or props.mainColor or props.maincolor or props.MainColor or props.Maincolor or props.Accent or props.accent or Color3.fromRGB(225, 58, 81)
-	local resizable = props.resizable or props.Resizable or props.resize or props.Resize or false
-	local backgroundEffect = props.backgroundEffect or props.BackgroundEffect or props.bgEffect or props.effect or nil -- "snow", "text", "image"
-	local bgText = props.bgText or props.backgroundText or "VELOCITY "
-	local bgImage = props.bgImage or props.backgroundImage or "rbxassetid://0"
-	-- // variables
 	local window = {}
-	-- // main
+	--
 	local screen = utility.new(
 		"ScreenGui",
 		{
@@ -149,7 +143,7 @@ function library:new(props)
 			DisplayOrder = 9999,
 			ResetOnSpawn = false,
 			ZIndexBehavior = "Global",
-			IgnoreGuiInset = true, -- FIX: Игнорируем верхнюю панель роблокса
+			IgnoreGuiInset = true,
 			Parent = game:GetService("CoreGui")
 		}
 	)
@@ -157,24 +151,23 @@ function library:new(props)
 	if (check_exploit == "Synapse" and syn.request and syn.protect_gui) then
 		syn.protect_gui(screen)
 	end
-	
-	-- Overlay (dark background)
-	local overlay = utility.new(
+	--
+	-- // SHADOW FRAME
+	local shadow = utility.new(
 		"Frame",
 		{
-			Name = "Overlay",
+			Name = "Shadow",
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
-			Size = UDim2.new(1, 0, 1, 0),
-			Position = UDim2.new(0.5, 0, 0.5, 0),
-			ZIndex = 9998,
+			Size = UDim2.new(0, 620, 0, 810),
+			Position = UDim2.new(0.5, 8, 0.5, 8),
+			ZIndex = 0,
 			Parent = screen
 		}
 	)
-	
-	-- 1
+	--
 	local outline = utility.new(
 		"Frame",
 		{
@@ -184,11 +177,11 @@ function library:new(props)
 			BorderSizePixel = 1,
 			Size = UDim2.new(0,600,0,790),
 			Position = UDim2.new(0.5,0,0.5,0),
-			ZIndex = 9999,
+			ZIndex = 1,
 			Parent = screen
 		}
 	)
-	-- 2
+	--
 	local outline2 = utility.new(
 		"Frame",
 		{
@@ -201,7 +194,7 @@ function library:new(props)
 			Parent = outline
 		}
 	)
-	-- 3
+	--
 	local indent = utility.new(
 		"Frame",
 		{
@@ -215,7 +208,7 @@ function library:new(props)
 			Parent = outline2
 		}
 	)
-	-- 4
+	--
 	local main = utility.new(
 		"Frame",
 		{
@@ -226,23 +219,7 @@ function library:new(props)
 			BorderSizePixel = 1,
 			Size = UDim2.new(1,-10,1,-25),
 			Position = UDim2.new(0.5,0,1,-5),
-			ClipsDescendants = true,
 			Parent = outline2
-		}
-	)
-	
-	-- Background effect holder
-	local bgEffectHolder = utility.new(
-		"Frame",
-		{
-			Name = "BGEffectHolder",
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 1, 0),
-			Position = UDim2.new(0.5, 0, 0.5, 0),
-			ClipsDescendants = true,
-			ZIndex = 1,
-			Parent = main
 		}
 	)
 	--
@@ -256,7 +233,7 @@ function library:new(props)
 			Parent = outline2
 		}
 	)
-	-- 5
+	--
 	local outline3 = utility.new(
 		"Frame",
 		{
@@ -287,7 +264,7 @@ function library:new(props)
 			Parent = title
 		}
 	)
-	-- 6
+	--
 	local holder = utility.new(
 		"Frame",
 		{
@@ -298,7 +275,7 @@ function library:new(props)
 			Parent = main
 		}
 	)
-	-- 8
+	--
 	local tabs = utility.new(
 		"Frame",
 		{
@@ -324,7 +301,7 @@ function library:new(props)
 			Parent = holder
 		}
 	)
-	-- 9
+	--
 	local outline4 = utility.new(
 		"Frame",
 		{
@@ -346,68 +323,89 @@ function library:new(props)
 			Parent = tabsbuttons
 		}
 	)
-	
-	-- Resize handle (triangle in bottom right corner)
-	local resizeHandle = nil
-	if resizable then
-		resizeHandle = utility.new(
-			"ImageLabel",
-			{
-				Name = "ResizeHandle",
-				AnchorPoint = Vector2.new(1, 1),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(0, 20, 0, 20),
-				Position = UDim2.new(1, -2, 1, -2),
-				Rotation = 0,
-				Image = "rbxassetid://3926305904",
-				ImageRectOffset = Vector2.new(804, 124),
-				ImageRectSize = Vector2.new(36, 36),
-				ImageColor3 = color,
-				ZIndex = 10000,
-				Parent = outline
-			}
-		)
-	end
-	
-	-- FIX: Курсор теперь Frame (прямоугольник), оптимизирован и рисуется по w2s
-	local customCursor = utility.new(
+	--
+	utility.dragify(title,outline)
+	--
+	-- // CURSOR (треугольник)
+	local cursorHolder = utility.new(
 		"Frame",
 		{
-			Name = "CustomCursor",
-			AnchorPoint = Vector2.new(0, 0), -- AnchorPoint 0,0 для точного позиционирования мыши
-			BackgroundColor3 = color, -- Цвет UI
-			BorderSizePixel = 0,
-			Size = UDim2.new(0, 8, 0, 14), -- Размер примерно как у мыши
+			Name = "CursorHolder",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(0, 16, 0, 22),
 			Position = UDim2.new(0, 0, 0, 0),
-			Rotation = 25, -- Повернут немного вправо
-			ZIndex = 100005, -- Выше всего
+			Rotation = -15,
+			ZIndex = 99999,
 			Visible = false,
 			Parent = screen
 		}
 	)
-	
-	-- Tooltip
-	local tooltipHolder = utility.new(
+	--
+	local cursorTriangle = utility.new(
+		"ImageLabel",
+		{
+			Name = "CursorTriangle",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Position = UDim2.new(0, 0, 0, 0),
+			Image = "rbxassetid://6432903961",
+			ImageColor3 = color,
+			ScaleType = Enum.ScaleType.Stretch,
+			ZIndex = 99999,
+			Parent = cursorHolder
+		}
+	)
+	--
+	local cursorOutline = utility.new(
+		"ImageLabel",
+		{
+			Name = "CursorOutline",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 2, 1, 2),
+			Position = UDim2.new(0, -1, 0, -1),
+			Image = "rbxassetid://6432903961",
+			ImageColor3 = Color3.fromRGB(0, 0, 0),
+			ScaleType = Enum.ScaleType.Stretch,
+			ZIndex = 99998,
+			Parent = cursorHolder
+		}
+	)
+	--
+	-- // TOOLTIP
+	local tooltipFrame = utility.new(
 		"Frame",
 		{
-			Name = "TooltipHolder",
-			AnchorPoint = Vector2.new(0, 0),
+			Name = "Tooltip",
 			BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-			BorderColor3 = color,
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			BorderSizePixel = 1,
-			Size = UDim2.new(0, 200, 0, 30),
+			Size = UDim2.new(0, 150, 0, 30),
 			Position = UDim2.new(0, 0, 0, 0),
-			ZIndex = 100001,
+			ZIndex = 99997,
 			Visible = false,
+			BackgroundTransparency = 1,
 			Parent = screen
 		}
 	)
-	
+	--
+	local tooltipAccent = utility.new(
+		"Frame",
+		{
+			Name = "TooltipAccent",
+			BackgroundColor3 = color,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 1),
+			Position = UDim2.new(0, 0, 0, 0),
+			ZIndex = 99998,
+			BackgroundTransparency = 1,
+			Parent = tooltipFrame
+		}
+	)
+	--
 	local tooltipText = utility.new(
 		"TextLabel",
 		{
 			Name = "TooltipText",
-			AnchorPoint = Vector2.new(0, 0),
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1, -10, 1, -6),
 			Position = UDim2.new(0, 5, 0, 3),
@@ -416,15 +414,19 @@ function library:new(props)
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			TextSize = textsize,
 			TextWrapped = true,
-			TextXAlignment = "Left",
-			TextYAlignment = "Top",
-			ZIndex = 100002,
-			Parent = tooltipHolder
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			TextStrokeTransparency = 0,
+			ZIndex = 99999,
+			TextTransparency = 1,
+			Parent = tooltipFrame
 		}
 	)
-	
 	--
-	utility.dragify(title,outline)
+	local tooltipMaxWidth = 180
+	local currentTooltipTween = nil
+	local tooltipVisible = false
+	--
 	-- // window tbl
 	window = {
 		["screen"] = screen,
@@ -433,8 +435,13 @@ function library:new(props)
 		["tabs"] = outline4,
 		["tabsbuttons"] = tabsbuttons,
 		["outline"] = outline,
-		["overlay"] = overlay,
-		["bgEffectHolder"] = bgEffectHolder,
+		["shadow"] = shadow,
+		["cursorHolder"] = cursorHolder,
+		["cursorTriangle"] = cursorTriangle,
+		["tooltipFrame"] = tooltipFrame,
+		["tooltipText"] = tooltipText,
+		["tooltipAccent"] = tooltipAccent,
+		["tooltipMaxWidth"] = tooltipMaxWidth,
 		["pages"] = {},
 		["pointers"] = {},
 		["dropdowns"] = {},
@@ -456,207 +463,152 @@ function library:new(props)
 				["TextColor3"] = {},
 				["ImageColor3"] = {}
 			}
-		},
-		["toggled"] = true,
-		["customCursor"] = customCursor,
-		["tooltipHolder"] = tooltipHolder,
-		["tooltipText"] = tooltipText,
-		["resizable"] = resizable,
-		["resizeHandle"] = resizeHandle,
-		["minSize"] = Vector2.new(400, 500),
-		["maxSize"] = Vector2.new(900, 1000),
-		["backgroundEffect"] = backgroundEffect,
-		["bgText"] = bgText,
-		["bgImage"] = bgImage
+		}
 	}
 	--
-	table.insert(window.themeitems["accent"]["BackgroundColor3"],outline)
-	table.insert(window.themeitems["accent"]["BackgroundColor3"], customCursor) -- Курсор меняет цвет вместе с темой
-	table.insert(window.themeitems["accent"]["BorderColor3"], tooltipHolder)
-	if resizeHandle then
-		table.insert(window.themeitems["accent"]["ImageColor3"], resizeHandle)
-	end
-	
-	-- Initialize background effect
-	if backgroundEffect then
-		window:setBackgroundEffect(backgroundEffect, bgText, bgImage)
-	end
-	
-	-- Resize functionality
-	if resizable and resizeHandle then
-		local resizing = false
-		local startSize
-		local startMouse
-		
-		resizeHandle.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				resizing = true
-				startSize = outline.AbsoluteSize
-				startMouse = Vector2.new(input.Position.X, input.Position.Y)
-			end
-		end)
-		
-		uis.InputChanged:Connect(function(input)
-			if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
-				local delta = Vector2.new(input.Position.X, input.Position.Y) - startMouse
-				local newWidth = math.clamp(startSize.X + delta.X, window.minSize.X, window.maxSize.X)
-				local newHeight = math.clamp(startSize.Y + delta.Y, window.minSize.Y, window.maxSize.Y)
-				ts:Create(outline, TweenInfo.new(0.1), {Size = UDim2.new(0, newWidth, 0, newHeight)}):Play()
-			end
-		end)
-		
-		uis.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				resizing = false
-			end
-		end)
-	end
-	
-	-- FIX: Логика курсора и тултипов (Оптимизация)
-	rs.RenderStepped:Connect(function()
-		if window.toggled then
-			-- Отрисовка курсора (только если окно открыто)
-			local mousePos = uis:GetMouseLocation()
-			customCursor.Position = UDim2.new(0, mousePos.X, 0, mousePos.Y) -- Без оффсета, нос курсора на точке
-			customCursor.Visible = true
-			uis.MouseIconEnabled = false
-			
-			-- Логика тултипа
-			-- (Код тултипа оставлен как был, но он работает внутри проверки window.toggled)
-		else
-			-- Если окно закрыто - не рендерим и не обновляем
-			customCursor.Visible = false
-			uis.MouseIconEnabled = true
-			if window.tooltipHolder.Visible then
-				window.tooltipHolder.Visible = false
-			end
-		end
-	end)
-
-	-- Tooltip system logic (оставлена базовая логика обновления текста, позиционирование теперь выше)
-	local tooltipHoverTime = 0
-	local currentHoveredElement = nil
-	local tooltipShowing = false
-	
-	rs.RenderStepped:Connect(function(dt)
-		if window.toggled and currentHoveredElement then
-			tooltipHoverTime = tooltipHoverTime + dt
-			if tooltipHoverTime >= 2 and not tooltipShowing then
-				tooltipShowing = true
-				local mousePos = uis:GetMouseLocation()
-				tooltipHolder.Position = UDim2.new(0, mousePos.X + 25, 0, mousePos.Y)
-				
-				local textBounds = game:GetService("TextService"):GetTextSize(
-					tooltipText.Text, 
-					textsize, 
-					Enum.Font[font], 
-					Vector2.new(190, 1000)
-				)
-				tooltipHolder.Size = UDim2.new(0, 200, 0, textBounds.Y + 10)
-				
-				ts:Create(tooltipHolder, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
-				ts:Create(tooltipText, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
-				tooltipHolder.Visible = true
-			elseif tooltipShowing then
-				local mousePos = uis:GetMouseLocation()
-				tooltipHolder.Position = UDim2.new(0, mousePos.X + 25, 0, mousePos.Y)
-			end
-		end
-	end)
-	
-	window.setTooltip = function(text)
-		if text and text ~= "" then
-			tooltipText.Text = text
-			currentHoveredElement = true
-		else
-			currentHoveredElement = nil
-			tooltipHoverTime = 0
-			if tooltipShowing then
-				tooltipShowing = false
-				ts:Create(tooltipHolder, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-				ts:Create(tooltipText, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-				delay(0.3, function()
-					if not tooltipShowing then
-						tooltipHolder.Visible = false
-					end
-				end)
-			end
-		end
-	end
-	
-	window.clearTooltip = function()
-		currentHoveredElement = nil
-		tooltipHoverTime = 0
-		if tooltipShowing then
-			tooltipShowing = false
-			ts:Create(tooltipHolder, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-			ts:Create(tooltipText, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-			delay(0.3, function()
-				if not tooltipShowing then
-					tooltipHolder.Visible = false
-				end
-			end)
-		end
-	end
+	table.insert(window.themeitems["accent"]["BackgroundColor3"], outline)
+	table.insert(window.themeitems["accent"]["ImageColor3"], cursorTriangle)
+	table.insert(window.themeitems["accent"]["BackgroundColor3"], tooltipAccent)
 	--
 	local toggled = true
 	local cooldown = false
-	local saved = UDim2.new(0.5, 0, 0.5, 0)
-	
-	-- FIX: Анимация (Убран tweenAllTransparency, вызывавший баг "куба")
-	
-	-- Initial open state
-	overlay.BackgroundTransparency = 0.5
-	outline.BackgroundTransparency = 0 -- Фон должен быть виден
-	outline.Position = UDim2.new(0.5, 0, 0.5, 0)
-	
+	local saved = UDim2.new(0,0,0,0)
+	--
+	-- // CURSOR & SHADOW UPDATE LOOP
+	local lastUpdateTime = 0
+	local frameCount = 0
+	local fpsCheckTime = 0
+	local currentFPS = 60
+	--
+	rs.RenderStepped:Connect(function(deltaTime)
+		frameCount = frameCount + 1
+		fpsCheckTime = fpsCheckTime + deltaTime
+		--
+		if fpsCheckTime >= 1 then
+			currentFPS = math.min(60, math.max(30, frameCount))
+			frameCount = 0
+			fpsCheckTime = 0
+		end
+		--
+		local targetInterval = 1 / math.min(60, currentFPS)
+		lastUpdateTime = lastUpdateTime + deltaTime
+		--
+		if lastUpdateTime >= targetInterval then
+			lastUpdateTime = 0
+			--
+			if toggled and screen.Enabled then
+				local mousePos = uis:GetMouseLocation()
+				local screenPos = Vector2.new(mousePos.X, mousePos.Y - 36)
+				--
+				cursorHolder.Position = UDim2.new(0, screenPos.X, 0, screenPos.Y)
+				cursorHolder.Visible = true
+				cursorTriangle.ImageColor3 = window.theme.accent
+				--
+				shadow.Position = UDim2.new(
+					outline.Position.X.Scale,
+					outline.Position.X.Offset + 8,
+					outline.Position.Y.Scale,
+					outline.Position.Y.Offset + 8
+				)
+				--
+				if tooltipVisible then
+					tooltipFrame.Position = UDim2.new(0, screenPos.X + 20, 0, screenPos.Y + 5)
+					tooltipAccent.BackgroundColor3 = window.theme.accent
+				end
+			else
+				cursorHolder.Visible = false
+			end
+		end
+	end)
+	--
+	-- // TOOLTIP FUNCTIONS
+	local function showTooltip(text)
+		if currentTooltipTween then
+			currentTooltipTween:Cancel()
+		end
+		--
+		tooltipText.Text = text or "N/A"
+		tooltipFrame.BackgroundTransparency = 1
+		tooltipText.TextTransparency = 1
+		tooltipAccent.BackgroundTransparency = 1
+		tooltipFrame.Visible = true
+		tooltipVisible = true
+		--
+		task.wait()
+		local textBounds = tooltipText.TextBounds
+		local width = math.min(tooltipMaxWidth, textBounds.X + 16)
+		local height = textBounds.Y + 10
+		tooltipFrame.Size = UDim2.new(0, width, 0, height)
+		--
+		currentTooltipTween = ts:Create(tooltipFrame, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0})
+		currentTooltipTween:Play()
+		ts:Create(tooltipText, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+		ts:Create(tooltipAccent, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+	end
+	--
+	local function hideTooltip()
+		if currentTooltipTween then
+			currentTooltipTween:Cancel()
+		end
+		tooltipFrame.Visible = false
+		tooltipFrame.BackgroundTransparency = 1
+		tooltipText.TextTransparency = 1
+		tooltipAccent.BackgroundTransparency = 1
+		tooltipVisible = false
+	end
+	--
+	window.showTooltip = showTooltip
+	window.hideTooltip = hideTooltip
+	--
 	uis.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.Keyboard then
 			if Input.KeyCode == window.key then
 				if cooldown == false then
 					if toggled then
-						-- CLOSE
 						cooldown = true
 						toggled = not toggled
-						window.toggled = false
 						saved = outline.Position
-						
-						-- Close animation (Only main frame and overlay)
-						ts:Create(overlay, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
-						
-						-- Вычисляем позицию ухода (вниз или в сторону, как в v1)
 						local xx,yy = 0,0
 						local xxx,yyy = 0,0
+						--
 						if (outline.AbsolutePosition.X+(outline.AbsoluteSize.X/2)) < (cam.ViewportSize.X/2) then
-							xx = -1.5 -- Улетаем влево
+							xx = -3
 						else
-							xx = 1.5 -- Улетаем вправо
+							xx = 3
 						end
-						yy = saved.Y.Scale
-						yyy = saved.Y.Offset
-						
+						--
+						if window.y then
+							if (outline.AbsolutePosition.Y+(outline.AbsoluteSize.Y/2)) < (cam.ViewportSize.Y/2) then
+								yy = -3
+							else
+								yy = 3
+							end
+						else
+							yy = saved.Y.Scale
+							yyy = saved.Y.Offset
+						end
+						--
+						cursorHolder.Visible = false
+						hideTooltip()
+						--
 						if window.x == false and window.y == false then
 							screen.Enabled = false
 						else
-							ts:Create(outline, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(xx, xxx, yy, yyy)}):Play()
+							ts:Create(outline, TweenInfo.new(0.5,Enum.EasingStyle.Quad,Enum.EasingDirection.In), {Position = UDim2.new(xx,xxx,yy,yyy)}):Play()
+							ts:Create(shadow, TweenInfo.new(1.5,Enum.EasingStyle.Quad,Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
 						end
-						
 						wait(0.5)
 						cooldown = false
 					else
-						-- OPEN
 						cooldown = true
 						toggled = not toggled
-						window.toggled = true
-						
 						if window.x == false and window.y == false then
 							screen.Enabled = true
 						else
-							-- Open animation
-							ts:Create(overlay, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
-							ts:Create(outline, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = saved}):Play()
+							ts:Create(outline, TweenInfo.new(0.5,Enum.EasingStyle.Quad,Enum.EasingDirection.Out), {Position = saved}):Play()
+							ts:Create(shadow, TweenInfo.new(1.5,Enum.EasingStyle.Quad,Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
 						end
-						
+						cursorHolder.Visible = true
 						wait(0.5)
 						cooldown = false
 					end
@@ -665,113 +617,12 @@ function library:new(props)
 		end
 	end)
 	--
+	ts:Create(shadow, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
+	--
 	window.labels[#window.labels+1] = titletext
-	-- // metatable indexing + return
+	--
 	setmetatable(window, library)
 	return window
-end
-
--- Background effect function (Оставлена без изменений)
-function library:setBackgroundEffect(effectType, text, image)
-	local bgHolder = self.bgEffectHolder
-	if not bgHolder then return end
-	
-	-- Clear existing effects
-	for _, child in pairs(bgHolder:GetChildren()) do
-		child:Destroy()
-	end
-	
-	if effectType == "snow" then
-		-- Snow effect
-		spawn(function()
-			while self.backgroundEffect == "snow" do
-				local snowflake = utility.new("Frame", {
-					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-					BackgroundTransparency = 0.7,
-					BorderSizePixel = 0,
-					Size = UDim2.new(0, math.random(2, 5), 0, math.random(2, 5)),
-					Position = UDim2.new(math.random() * 1, 0, -0.05, 0),
-					ZIndex = 2,
-					Parent = bgHolder
-				})
-				
-				local duration = math.random(3, 6)
-				local endX = snowflake.Position.X.Scale + (math.random() - 0.5) * 0.3
-				
-				ts:Create(snowflake, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
-					Position = UDim2.new(endX, 0, 1.1, 0),
-					BackgroundTransparency = 1
-				}):Play()
-				
-				game:GetService("Debris"):AddItem(snowflake, duration)
-				wait(0.1)
-			end
-		end)
-		
-	elseif effectType == "text" then
-		-- Text effect
-		local textLabel = utility.new("TextLabel", {
-			BackgroundTransparency = 1,
-			Size = UDim2.new(3, 0, 1, 0),
-			Position = UDim2.new(0, 0, 0, 0),
-			Font = self.font,
-			Text = string.rep(text or "VELOCITY ", 50),
-			TextColor3 = self.theme.accent,
-			TextTransparency = 0.85,
-			TextSize = 14,
-			TextWrapped = true,
-			ZIndex = 2,
-			Parent = bgHolder
-		})
-		
-		spawn(function()
-			while self.backgroundEffect == "text" do
-				textLabel.Position = UDim2.new(0, 0, 0, 0)
-				ts:Create(textLabel, TweenInfo.new(10, Enum.EasingStyle.Linear), {
-					Position = UDim2.new(-1, 0, 0, 0)
-				}):Play()
-				wait(10)
-			end
-		end)
-		
-	elseif effectType == "image" then
-		-- Image effect
-		local imageContainer = utility.new("Frame", {
-			BackgroundTransparency = 1,
-			Size = UDim2.new(3, 0, 1, 0),
-			Position = UDim2.new(0, 0, 0, 0),
-			ZIndex = 2,
-			Parent = bgHolder
-		})
-		
-		utility.new("UIListLayout", {
-			FillDirection = "Horizontal",
-			Padding = UDim.new(0, 50),
-			Parent = imageContainer
-		})
-		
-		for i = 1, 10 do
-			utility.new("ImageLabel", {
-				BackgroundTransparency = 1,
-				Size = UDim2.new(0, 60, 0, 60),
-				Image = image or "rbxassetid://0",
-				ImageTransparency = 0.8,
-				ImageColor3 = self.theme.accent,
-				ZIndex = 2,
-				Parent = imageContainer
-			})
-		end
-		
-		spawn(function()
-			while self.backgroundEffect == "image" do
-				imageContainer.Position = UDim2.new(0, 0, 0.5, -30)
-				ts:Create(imageContainer, TweenInfo.new(15, Enum.EasingStyle.Linear), {
-					Position = UDim2.new(-1, 0, 0.5, -30)
-				}):Play()
-				wait(15)
-			end
-		end)
-	end
 end
 
 -- // УВЕДОМЛЕНИЯ
@@ -788,19 +639,19 @@ function library:Notification(props)
 	local outline = utility.new("Frame", {
 		Name = "Notification", Parent = self.screen, BackgroundColor3 = self.theme.accent,
 		BorderSizePixel = 0, Position = UDim2.new(1, 10, 1, -20 - offset),
-		Size = UDim2.new(0, 250, 0, 0), AnchorPoint = Vector2.new(1, 1), ZIndex = 99999
+		Size = UDim2.new(0, 250, 0, 0), AnchorPoint = Vector2.new(1, 1), ZIndex = 9999
 	})
 	table.insert(self.themeitems["accent"]["BackgroundColor3"], outline)
 
 	local holder = utility.new("Frame", {
 		Parent = outline, BackgroundColor3 = Color3.fromRGB(20, 20, 20), BorderSizePixel = 0,
-		Position = UDim2.new(0, 1, 0, 1), Size = UDim2.new(1, -2, 1, -2), ZIndex = 99999
+		Position = UDim2.new(0, 1, 0, 1), Size = UDim2.new(1, -2, 1, -2), ZIndex = 9999
 	})
 
 	local titleLabel = utility.new("TextLabel", {
 		Parent = holder, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 5),
 		Size = UDim2.new(1, -20, 0, 20), Font = self.font, Text = title_text,
-		TextColor3 = self.theme.accent, TextSize = self.textsize + 2, TextXAlignment = "Left", ZIndex = 99999
+		TextColor3 = self.theme.accent, TextSize = self.textsize + 2, TextXAlignment = "Left", ZIndex = 9999
 	})
 	table.insert(self.themeitems["accent"]["TextColor3"], titleLabel)
 
@@ -808,7 +659,7 @@ function library:Notification(props)
 		Parent = holder, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 25),
 		Size = UDim2.new(1, -20, 0, 0), Font = self.font, Text = desc_text,
 		TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = self.textsize,
-		TextWrapped = true, TextXAlignment = "Left", TextYAlignment = "Top", ZIndex = 99999
+		TextWrapped = true, TextXAlignment = "Left", TextYAlignment = "Top", ZIndex = 9999
 	})
     
 	descLabel.Size = UDim2.new(1, -20, 0, 1000)
@@ -842,7 +693,7 @@ function library:watermark()
 			BorderSizePixel = 1,
 			Size = UDim2.new(0,300,0,26),
 			Position = UDim2.new(1,-10,0,10),
-			ZIndex = 99900,
+			ZIndex = 9900,
 			Visible = false,
 			Parent = self.screen
 		}
@@ -859,7 +710,7 @@ function library:watermark()
 			BorderSizePixel = 1,
 			Size = UDim2.new(1,-4,1,-4),
 			Position = UDim2.new(0.5,0,0.5,0),
-			ZIndex = 99901,
+			ZIndex = 9901,
 			Parent = outline
 		}
 	)
@@ -873,7 +724,7 @@ function library:watermark()
 			BorderSizePixel = 1,
 			Size = UDim2.new(1,0,1,0),
 			Position = UDim2.new(0.5,0,0.5,0),
-			ZIndex = 99902,
+			ZIndex = 9902,
 			Parent = outline2
 		}
 	)
@@ -891,7 +742,7 @@ function library:watermark()
 			TextXAlignment = "Left",
 			TextSize = self.textsize,
 			TextStrokeTransparency = 0,
-			ZIndex = 99903,
+			ZIndex = 9903,
 			Parent = indent
 		}
 	)
@@ -1058,7 +909,7 @@ function library:loader(props)
 		}
 	)
 	--
-	local makebutton = function(name,parent)
+	local makebutton = function(bname,parent)
 		local button_holder = utility.new(
 			"Frame",
 			{
@@ -1126,7 +977,7 @@ function library:loader(props)
 				BackgroundTransparency = 1,
 				Size = UDim2.new(1,0,1,0),
 				Position = UDim2.new(0,0,0,0),
-				Text = name,
+				Text = bname,
 				TextColor3 = Color3.fromRGB(255,255,255),
 				TextSize = 12,
 				TextStrokeTransparency = 0,
@@ -1187,7 +1038,6 @@ end
 --
 function watermarks:toggle(bool)
 	local watermark = self
-	--
 	watermark.outline.Visible = bool
 end
 --
@@ -1204,11 +1054,6 @@ function library:saveconfig(folder_name, config_name)
             end
         end
     end
-	
-	-- Save window size if resizable
-	if self.resizable then
-		cfg["__windowSize"] = {self.outline.AbsoluteSize.X, self.outline.AbsoluteSize.Y}
-	end
 
     local success, err = pcall(function()
         writefile(folder_name.."/"..config_name..".cfg", hs:JSONEncode(cfg))
@@ -1230,14 +1075,6 @@ function library:loadconfig(folder_name, config_name)
 
     local success, err = pcall(function()
         local cfg = hs:JSONDecode(readfile(path))
-		
-		-- Load window size if resizable
-		if self.resizable and cfg["__windowSize"] then
-			local size = cfg["__windowSize"]
-			ts:Create(self.outline, TweenInfo.new(0.5), {Size = UDim2.new(0, size[1], 0, size[2])}):Play()
-			cfg["__windowSize"] = nil
-		end
-		
         for name, value in pairs(cfg) do
             if self.pointers[name] then
                 local element = self.pointers[name]
@@ -1259,11 +1096,9 @@ end
 --
 function library:settheme(theme,color)
 	local window = self
-	--
 	if window.theme[theme] then
 		window.theme[theme] = color
 	end
-	--
 	if window.themeitems[theme] then
 		for i,v in pairs(window.themeitems[theme]) do
 			for z,x in pairs(v) do
@@ -1411,7 +1246,6 @@ function library:page(props)
 			Size = UDim2.new(1,-20,1,-20),
 			Position = UDim2.new(0.5,0,0.5,0),
 			Visible = false,
-			ClipsDescendants = true,
 			Parent = self.tabs
 		}
 	)
@@ -1501,34 +1335,18 @@ function library:page(props)
 					end
 				end
 			end
-			--
 			self:closewindows()
-			--
 			page.page.Visible = true
 			page.open = true
 			page.outline.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			page.line.Size = UDim2.new(1,0,0,3)
 			page.line.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-			
-			-- Page transition animation
-			for _, child in pairs(pageholder:GetDescendants()) do
-				if child:IsA("Frame") or child:IsA("TextLabel") or child:IsA("TextButton") then
-					if child:IsA("Frame") then
-						child.BackgroundTransparency = 1
-						ts:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
-					elseif child:IsA("TextLabel") or child:IsA("TextButton") then
-						child.TextTransparency = 1
-						ts:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
-					end
-				end
-			end
 		end
 	end)
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
-		self.library.pointers[tostring(pointer)] = page.pointers
+		self.pointers[tostring(pointer)] = page.pointers
 	end
 	--
 	self.labels[#self.labels+1] = label
@@ -1538,7 +1356,6 @@ end
 --
 function pages:openpage()
 	local page = self
-	--
 	if page.open == false then
 		for i,v in pairs(page.library.pages) do
 			if v ~= page then
@@ -1551,7 +1368,6 @@ function pages:openpage()
 				end
 			end
 		end
-		--
 		page.page.Visible = true
 		page.open = true
 		page.outline.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -1564,7 +1380,6 @@ function pages:section(props)
 	local name = props.name or props.Name or props.page or props.Page or props.pagename or props.Pagename or props.PageName or props.pageName or "new ui"
 	local side = props.side or props.Side or props.sectionside or props.Sectionside or props.SectionSide or props.sectionSide or "left"
 	local size = props.size or props.Size or props.yaxis or props.yAxis or props.YAxis or props.Yaxis or 200
-	local collapsible = props.collapsible or props.Collapsible or props.collapse or props.Collapse or true
 	side = side:lower()
 	local section = {}
 	--
@@ -1576,7 +1391,6 @@ function pages:section(props)
 			BorderMode = "Inset",
 			BorderSizePixel = 1,
 			Size = UDim2.new(1,0,0,size),
-			ClipsDescendants = true,
 			Parent = self[side]
 		}
 	)
@@ -1618,30 +1432,13 @@ function pages:section(props)
 			Parent = outline
 		}
 	)
-	
-	-- Collapse button
-	local collapseBtn = utility.new(
-		"TextButton",
-		{
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0,15,0,15),
-			Position = UDim2.new(0,3,0,2),
-			Font = self.library.font,
-			Text = "-",
-			TextColor3 = self.library.theme.accent,
-			TextSize = self.library.textsize + 2,
-			TextStrokeTransparency = 0,
-			Parent = outline
-		}
-	)
-	table.insert(self.library.themeitems["accent"]["TextColor3"], collapseBtn)
 	--
 	local title = utility.new(
 		"TextLabel",
 		{
 			BackgroundTransparency = 1,
-			Size = UDim2.new(1,-20,0,20),
-			Position = UDim2.new(0,18,0,0),
+			Size = UDim2.new(1,-5,0,20),
+			Position = UDim2.new(0,5,0,0),
 			Font = self.library.font,
 			Text = name,
 			TextColor3 = Color3.fromRGB(255,255,255),
@@ -1666,67 +1463,10 @@ function pages:section(props)
 		["sectionholder"] = sectionholder,
 		["color"] = color,
 		["content"] = content,
-		["outline"] = outline,
-		["collapseBtn"] = collapseBtn,
-		["collapsed"] = false,
-		["originalSize"] = size,
 		["pointers"] = {}
 	}
-	
-	-- Collapse functionality
-	if collapsible then
-		collapseBtn.MouseButton1Down:Connect(function()
-			section.collapsed = not section.collapsed
-			
-			if section.collapsed then
-				collapseBtn.Text = "+"
-				-- Animate collapse
-				ts:Create(sectionholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(1, 0, 0, 25)
-				}):Play()
-				
-				-- Fade out children
-				for _, child in pairs(content:GetChildren()) do
-					if child:IsA("Frame") then
-						for _, subChild in pairs(child:GetDescendants()) do
-							if subChild:IsA("TextLabel") or subChild:IsA("TextButton") or subChild:IsA("TextBox") then
-								ts:Create(subChild, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-							elseif subChild:IsA("Frame") and subChild.BackgroundTransparency < 1 then
-								ts:Create(subChild, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-							end
-						end
-					end
-				end
-			else
-				collapseBtn.Text = "-"
-				-- Animate expand
-				ts:Create(sectionholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(1, 0, 0, section.originalSize)
-				}):Play()
-				
-				-- Fade in children
-				delay(0.2, function()
-					for _, child in pairs(content:GetChildren()) do
-						if child:IsA("Frame") then
-							for _, subChild in pairs(child:GetDescendants()) do
-								if subChild:IsA("TextLabel") or subChild:IsA("TextButton") or subChild:IsA("TextBox") then
-									ts:Create(subChild, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
-								elseif subChild:IsA("Frame") and subChild.Name ~= "color" then
-									ts:Create(subChild, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
-								end
-							end
-						end
-					end
-				end)
-			end
-		end)
-	else
-		collapseBtn.Visible = false
-		title.Position = UDim2.new(0, 5, 0, 0)
-	end
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = section.pointers
@@ -1811,7 +1551,7 @@ function pages:multisection(props)
 		}
 	)
 	--
-	local buttons = utility.new(
+	local btns = utility.new(
 		"Frame",
 		{
 			AnchorPoint = Vector2.new(0.5,0),
@@ -1842,7 +1582,7 @@ function pages:multisection(props)
 		{
 			FillDirection = "Horizontal",
 			Padding = UDim.new(0,2),
-			Parent = buttons
+			Parent = btns
 		}
 	)
 	--
@@ -1866,14 +1606,13 @@ function pages:multisection(props)
 		["color"] = color,
 		["tabsholder"] = tabsholder,
 		["mssections"] = {},
-		["buttons"] = buttons,
+		["buttons"] = btns,
 		["tabs"] = tabs,
 		["tabs_outline"] = tabs_outline,
 		["pointers"] = {}
 	}
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = multisection.pointers
@@ -2026,9 +1765,7 @@ function multisections:section(props)
 					end
 				end
 			end
-			--
 			mssection.library:closewindows()
-			--
 			mssection.content.Visible = true
 			mssection.open = true
 			mssection.outline.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
@@ -2038,7 +1775,6 @@ function multisections:section(props)
 	end)
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = mssection.pointers
@@ -2054,7 +1790,7 @@ function sections:toggle(props)
 	local name = props.name or props.Name or props.page or props.Page or props.pagename or props.Pagename or props.PageName or props.pageName or "new ui"
 	local def = props.def or props.Def or props.default or props.Default or props.toggle or props.Toggle or props.toggled or props.Toggled or false
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	local toggle = {}
 	--
 	local toggleholder = utility.new(
@@ -2141,44 +1877,35 @@ function sections:toggle(props)
 		["title"] = title,
 		["color"] = color,
 		["callback"] = callback,
-		["current"] = def
+		["current"] = def,
+		["tooltip"] = tooltipstr
 	}
 	--
 	button.MouseButton1Down:Connect(function()
 		if toggle.current then
-			toggle.current = false
 			toggle.callback(false)
-			-- Smooth transparency animation for toggle
-			ts:Create(color, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-			}):Play()
+			toggle.color.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			local find = table.find(self.library.themeitems["accent"]["BackgroundColor3"],toggle.color)
 			if find then
 				table.remove(self.library.themeitems["accent"]["BackgroundColor3"],find)
 			end
+			toggle.current = false
 		else
-			toggle.current = true
 			toggle.callback(true)
-			-- Smooth transparency animation for toggle
-			ts:Create(color, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				BackgroundColor3 = self.library.theme.accent
-			}):Play()
+			toggle.color.BackgroundColor3 = self.library.theme.accent
 			table.insert(self.library.themeitems["accent"]["BackgroundColor3"],toggle.color)
+			toggle.current = true
 		end
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		button.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		button.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
+	--
+	button.MouseEnter:Connect(function()
+		self.library.showTooltip(toggle.tooltip)
+	end)
+	button.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = toggle
@@ -2193,17 +1920,13 @@ end
 function toggles:set(bool)
 	if bool ~= nil then
 		local toggle = self
-		toggle.current = bool
 		toggle.callback(bool)
+		toggle.current = bool
 		if bool then
-			ts:Create(toggle.color, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				BackgroundColor3 = self.library.theme.accent
-			}):Play()
+			toggle.color.BackgroundColor3 = self.library.theme.accent
 			table.insert(self.library.themeitems["accent"]["BackgroundColor3"],toggle.color)
 		else
-			ts:Create(toggle.color, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-			}):Play()
+			toggle.color.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			local find = table.find(self.library.themeitems["accent"]["BackgroundColor3"],toggle.color)
 			if find then
 				table.remove(self.library.themeitems["accent"]["BackgroundColor3"],find)
@@ -2215,7 +1938,7 @@ end
 function sections:button(props)
 	local name = props.name or props.Name or "new button"
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	local button = {}
 	--
 	local buttonholder = utility.new(
@@ -2261,7 +1984,7 @@ function sections:button(props)
 		}
 	)
 	--
-	local gradient = utility.new(
+	utility.new(
 		"UIGradient",
 		{
 			Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(199, 191, 204)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))},
@@ -2297,19 +2020,17 @@ function sections:button(props)
 			table.remove(self.library.themeitems["accent"]["BorderColor3"],find)
 		end
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		buttonpress.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		buttonpress.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
+	--
+	buttonpress.MouseEnter:Connect(function()
+		self.library.showTooltip(tooltipstr)
+	end)
+	buttonpress.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
 	--
 	button = {
-		["library"] = self.library
+		["library"] = self.library,
+		["tooltip"] = tooltipstr
 	}
 	--
 	self.library.labels[#self.library.labels+1] = buttonpress
@@ -2326,7 +2047,7 @@ function sections:slider(props)
 	local ticking = props.tick or props.Tick or props.ticking or props.Ticking or false
 	local measurement = props.measurement or props.Measurement or props.digit or props.Digit or props.calc or props.Calc or ""
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	def = math.clamp(def,min,max)
 	local slider = {}
 	--
@@ -2462,10 +2183,11 @@ function sections:slider(props)
 		["measurement"] = measurement,
 		["tick"] = ticking,
 		["rounding"] = rounding,
-		["callback"] = callback
+		["callback"] = callback,
+		["tooltip"] = tooltipstr
 	}
 	--
-	local function slide()
+	local function doslide()
 		local size = math.clamp(plr:GetMouse().X - slider.color.AbsolutePosition.X ,0 ,slider.color.AbsoluteSize.X)
 		local result = (slider.max - slider.min) / slider.color.AbsoluteSize.X * size + slider.min
 		if slider.rounding then
@@ -2493,14 +2215,21 @@ function sections:slider(props)
 	--
 	sliderbutton.MouseButton1Down:Connect(function()
 		slider.holding = true
-		slide()
+		doslide()
 		table.insert(self.library.themeitems["accent"]["BorderColor3"],outline)
 		outline.BorderColor3 = self.library.theme.accent
 	end)
 	--
+	sliderbutton.MouseEnter:Connect(function()
+		self.library.showTooltip(slider.tooltip)
+	end)
+	sliderbutton.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
+	--
 	uis.InputChanged:Connect(function()
 		if slider.holding then
-			slide()
+			doslide()
 		end
 	end)
 	--
@@ -2514,19 +2243,8 @@ function sections:slider(props)
 			end
 		end
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		sliderbutton.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		sliderbutton.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = slider
@@ -2539,9 +2257,9 @@ function sections:slider(props)
 	return slider
 end
 --
-function sliders:set(value)
-	local size = math.clamp((self.color.AbsoluteSize.X / (self.max - self.min) * (value - self.min)) ,0 ,self.color.AbsoluteSize.X)
-	local result = value
+function sliders:set(val)
+	local size = math.clamp((self.color.AbsoluteSize.X / (self.max - self.min) * (val - self.min)) ,0 ,self.color.AbsoluteSize.X)
+	local result = val
 	if self.rounding then
 		local newres = math.floor(result)
 		self.value.Text = newres..self.measurement.."/"..self.max..self.measurement
@@ -2567,53 +2285,33 @@ end
 --
 function library:closewindows(ignore)
 	local window = self
-	--
 	for i,v in pairs(window.dropdowns) do
 		if v ~= ignore then
 			if v.open then
-				-- Animate close
-				ts:Create(v.optionsholder, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(1, 0, 0, 0)
-				}):Play()
-				delay(0.3, function()
-					v.optionsholder.Visible = false
-				end)
+				v.optionsholder.Visible = false
 				v.indicator.Text = "+"
 				v.open = false
 			end
 		end
 	end
-	--
 	for i,v in pairs(window.multiboxes) do
 		if v ~= ignore then
 			if v.open then
-				ts:Create(v.optionsholder, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(1, 0, 0, 0)
-				}):Play()
-				delay(0.3, function()
-					v.optionsholder.Visible = false
-				end)
+				v.optionsholder.Visible = false
 				v.indicator.Text = "+"
 				v.open = false
 			end
 		end
 	end
-	--
 	for i,v in pairs(window.buttonboxs) do
 		if v ~= ignore then
 			if v.open then
-				ts:Create(v.optionsholder, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(1, 0, 0, 0)
-				}):Play()
-				delay(0.3, function()
-					v.optionsholder.Visible = false
-				end)
+				v.optionsholder.Visible = false
 				v.indicator.Text = "+"
 				v.open = false
 			end
 		end
 	end
-	--
 	for i,v in pairs(window.colorpickers) do
 		if v ~= ignore then
 			if v.open then
@@ -2630,7 +2328,7 @@ function sections:dropdown(props)
 	local max = props.max or props.Max or props.maximum or props.Maximum or 4
 	local options = props.options or props.Options or props.Settings or props.settings or {}
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	local dropdown = {}
 	--
 	local dropdownholder = utility.new(
@@ -2639,7 +2337,6 @@ function sections:dropdown(props)
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1,0,0,35),
 			ZIndex = 2,
-			ClipsDescendants = false,
 			Parent = self.content
 		}
 	)
@@ -2761,18 +2458,15 @@ function sections:dropdown(props)
 			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			BorderMode = "Inset",
 			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,0),
+			Size = UDim2.new(1,0,0,20),
 			Position = UDim2.new(0,0,0,34),
 			Visible = false,
-			ClipsDescendants = true,
-			ZIndex = 10,
 			Parent = dropdownholder
 		}
 	)
 	--
 	local size = #options
 	size = math.clamp(size,1,max)
-	local targetHeight = size * 20 + 2
 	--
 	local optionsoutline = utility.new(
 		"ScrollingFrame",
@@ -2781,7 +2475,7 @@ function sections:dropdown(props)
 			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			BorderMode = "Inset",
 			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,targetHeight),
+			Size = UDim2.new(1,0,size,2),
 			Position = UDim2.new(0,0,0,0),
 			ClipsDescendants = true,
 			CanvasSize = UDim2.new(0,0,0,18*#options),
@@ -2790,7 +2484,7 @@ function sections:dropdown(props)
 			ScrollBarThickness = 5,
 			VerticalScrollBarInset = "ScrollBar",
 			VerticalScrollBarPosition = "Right",
-			ZIndex = 15,
+			ZIndex = 5,
 			Parent = optionsholder
 		}
 	)
@@ -2806,7 +2500,6 @@ function sections:dropdown(props)
 	dropdown = {
 		["library"] = self.library,
 		["optionsholder"] = optionsholder,
-		["optionsoutline"] = optionsoutline,
 		["indicator"] = indicator,
 		["options"] = options,
 		["title"] = title,
@@ -2815,7 +2508,7 @@ function sections:dropdown(props)
 		["titles"] = {},
 		["current"] = def,
 		["callback"] = callback,
-		["targetHeight"] = targetHeight
+		["tooltip"] = tooltipstr
 	}
 	--
 	table.insert(dropdown.library.dropdowns,dropdown)
@@ -2828,7 +2521,7 @@ function sections:dropdown(props)
 				BackgroundTransparency = 1,
 				Size = UDim2.new(1,0,0,18),
 				Text = "",
-				ZIndex = 16,
+				ZIndex = 6,
 				Parent = optionsoutline
 			}
 		)
@@ -2847,7 +2540,7 @@ function sections:dropdown(props)
 				TextStrokeTransparency = 0,
 				TextXAlignment = "Left",
 				ClipsDescendants = true,
-				ZIndex = 16,
+				ZIndex = 6,
 				Parent = ddoptionbutton
 			}
 		)
@@ -2858,13 +2551,7 @@ function sections:dropdown(props)
 		if v == dropdown.current then ddoptiontitle.TextColor3 = self.library.theme.accent end
 		--
 		ddoptionbutton.MouseButton1Down:Connect(function()
-			-- Animate close
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, 0)
-			}):Play()
-			delay(0.5, function()
-				optionsholder.Visible = false
-			end)
+			optionsholder.Visible = false
 			dropdown.open = false
 			indicator.Text = "+"
 			for z,x in pairs(dropdown.titles) do
@@ -2889,38 +2576,23 @@ function sections:dropdown(props)
 				v.TextColor3 = Color3.fromRGB(255,255,255)
 			end
 		end
-		
-		if not dropdown.open then
-			optionsholder.Visible = true
-			optionsholder.Size = UDim2.new(1, 0, 0, 0)
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, dropdown.targetHeight)
-			}):Play()
+		optionsholder.Visible = not dropdown.open
+		dropdown.open = not dropdown.open
+		if dropdown.open then
 			indicator.Text = "-"
 		else
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, 0)
-			}):Play()
-			delay(0.5, function()
-				optionsholder.Visible = false
-			end)
 			indicator.Text = "+"
 		end
-		dropdown.open = not dropdown.open
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		dropdownbutton.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		dropdownbutton.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
+	--
+	dropdownbutton.MouseEnter:Connect(function()
+		self.library.showTooltip(dropdown.tooltip)
+	end)
+	dropdownbutton.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = dropdown
@@ -2933,285 +2605,15 @@ function sections:dropdown(props)
 	return dropdown
 end
 --
-function sections:buttonbox(props)
-	local name = props.name or props.Name or props.page or props.Page or props.pagename or props.Pagename or props.PageName or props.pageName or "new ui"
-	local def = props.def or props.Def or props.default or props.Default or ""
-	local max = props.max or props.Max or props.maximum or props.Maximum or 4
-	local options = props.options or props.Options or props.Settings or props.settings or {}
-	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
-	local buttonbox = {}
-	--
-	local buttonboxholder = utility.new(
-		"Frame",
-		{
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1,0,0,35),
-			ZIndex = 2,
-			ClipsDescendants = false,
-			Parent = self.content
-		}
-	)
-	--
-	local outline = utility.new(
-		"Frame",
-		{
-			BackgroundColor3 = Color3.fromRGB(24, 24, 24),
-			BorderColor3 = Color3.fromRGB(12, 12, 12),
-			BorderMode = "Inset",
-			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,20),
-			Position = UDim2.new(0,0,0,15),
-			Parent = buttonboxholder
-		}
-	)
-	--
-	local outline2 = utility.new(
-		"Frame",
-		{
-			BackgroundColor3 = Color3.fromRGB(24, 24, 24),
-			BorderColor3 = Color3.fromRGB(56, 56, 56),
-			BorderMode = "Inset",
-			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,1,0),
-			Position = UDim2.new(0,0,0,0),
-			Parent = outline
-		}
-	)
-	--
-	local color = utility.new(
-		"Frame",
-		{
-			BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-			BorderSizePixel = 0,
-			Size = UDim2.new(1,0,1,0),
-			Position = UDim2.new(0,0,0,0),
-			Parent = outline2
-		}
-	)
-	--
-	utility.new(
-		"UIGradient",
-		{
-			Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(199, 191, 204)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))},
-			Rotation = 90,
-			Parent = color
-		}
-	)
-	--
-	local indicator = utility.new(
-		"TextLabel",
-		{
-			AnchorPoint = Vector2.new(0.5,0),
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1,-10,1,0),
-			Position = UDim2.new(0.5,0,0,0),
-			Font = self.library.font,
-			Text = "+",
-			TextColor3 = Color3.fromRGB(255,255,255),
-			TextSize = self.library.textsize,
-			TextStrokeTransparency = 0,
-			TextXAlignment = "Right",
-			ClipsDescendants = true,
-			Parent = outline
-		}
-	)
-	--
-	local title = utility.new(
-		"TextLabel",
-		{
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1,0,0,15),
-			Position = UDim2.new(0,0,0,0),
-			Font = self.library.font,
-			Text = name,
-			TextColor3 = Color3.fromRGB(255,255,255),
-			TextSize = self.library.textsize,
-			TextStrokeTransparency = 0,
-			TextXAlignment = "Left",
-			Parent = buttonboxholder
-		}
-	)
-	--
-	local buttonboxbutton = utility.new(
-		"TextButton",
-		{
-			AnchorPoint = Vector2.new(0,0),
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1,0,1,0),
-			Position = UDim2.new(0,0,0,0),
-			Text = "",
-			Parent = buttonboxholder
-		}
-	)
-	--
-	local optionsholder = utility.new(
-		"Frame",
-		{
-			BackgroundTransparency = 1,
-			BorderColor3 = Color3.fromRGB(56, 56, 56),
-			BorderMode = "Inset",
-			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,0),
-			Position = UDim2.new(0,0,0,34),
-			Visible = false,
-			ClipsDescendants = true,
-			ZIndex = 10,
-			Parent = buttonboxholder
-		}
-	)
-	--
-	local size = #options
-	size = math.clamp(size,1,max)
-	local targetHeight = size * 20 + 2
-	--
-	local optionsoutline = utility.new(
-		"ScrollingFrame",
-		{
-			BackgroundColor3 = Color3.fromRGB(56, 56, 56),
-			BorderColor3 = Color3.fromRGB(56, 56, 56),
-			BorderMode = "Inset",
-			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,targetHeight),
-			Position = UDim2.new(0,0,0,0),
-			ClipsDescendants = true,
-			CanvasSize = UDim2.new(0,0,0,18*#options),
-			ScrollBarImageTransparency = 0.25,
-			ScrollBarImageColor3 = Color3.fromRGB(0,0,0),
-			ScrollBarThickness = 5,
-			VerticalScrollBarInset = "ScrollBar",
-			VerticalScrollBarPosition = "Right",
-			ZIndex = 15,
-			Parent = optionsholder
-		}
-	)
-	--
-	utility.new(
-		"UIListLayout",
-		{
-			FillDirection = "Vertical",
-			Parent = optionsoutline
-		}
-	)
-	--
-	buttonbox = {
-		["library"] = self.library,
-		["optionsholder"] = optionsholder,
-		["indicator"] = indicator,
-		["options"] = options,
-		["title"] = title,
-		["open"] = false,
-		["titles"] = {},
-		["current"] = def,
-		["callback"] = callback,
-		["targetHeight"] = targetHeight
-	}
-	--
-	table.insert(buttonbox.library.buttonboxs,buttonbox)
-	--
-	for i,v in pairs(options) do
-		local bboptionbutton = utility.new(
-			"TextButton",
-			{
-				AnchorPoint = Vector2.new(0,0),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1,0,0,18),
-				Text = "",
-				ZIndex = 16,
-				Parent = optionsoutline
-			}
-		)
-		--
-		local bboptiontitle = utility.new(
-			"TextLabel",
-			{
-				AnchorPoint = Vector2.new(0.5,0),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1,-10,1,0),
-				Position = UDim2.new(0.5,0,0,0),
-				Font = self.library.font,
-				Text = v,
-				TextColor3 = Color3.fromRGB(255,255,255),
-				TextSize = self.library.textsize,
-				TextStrokeTransparency = 0,
-				TextXAlignment = "Left",
-				ClipsDescendants = true,
-				ZIndex = 16,
-				Parent = bboptionbutton
-			}
-		)
-		--
-		self.library.labels[#self.library.labels+1] = bboptiontitle
-		table.insert(buttonbox.titles,bboptiontitle)
-		--
-		bboptionbutton.MouseButton1Down:Connect(function()
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, 0)
-			}):Play()
-			delay(0.5, function()
-				optionsholder.Visible = false
-			end)
-			buttonbox.open = false
-			indicator.Text = "+"
-			buttonbox.current = v
-			buttonbox.callback(v)
-		end)
-	end
-	--
-	buttonboxbutton.MouseButton1Down:Connect(function()
-		buttonbox.library:closewindows(buttonbox)
-		
-		if not buttonbox.open then
-			optionsholder.Visible = true
-			optionsholder.Size = UDim2.new(1, 0, 0, 0)
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, buttonbox.targetHeight)
-			}):Play()
-			indicator.Text = "-"
-		else
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, 0)
-			}):Play()
-			delay(0.5, function()
-				optionsholder.Visible = false
-			end)
-			indicator.Text = "+"
-		end
-		buttonbox.open = not buttonbox.open
-	end)
-	
-	-- Tooltip
-	if tooltip then
-		buttonboxbutton.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		buttonboxbutton.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
-	--
-	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
-	if pointer then
-		if self.pointers then
-			self.library.pointers[tostring(pointer)] = buttonbox
-		end
-	end
-	--
-	self.library.labels[#self.library.labels+1] = title
-	setmetatable(buttonbox, buttonboxs)
-	return buttonbox
-end
---
-function dropdowns:set(value)
-	if value ~= nil then
+function dropdowns:set(val)
+	if val ~= nil then
 		local dropdown = self
-		if table.find(dropdown.options,value) then
-			self.current = tostring(value)
-			self.value.Text = tostring(value)
-			self.callback(tostring(value))
+		if table.find(dropdown.options,val) then
+			self.current = tostring(val)
+			self.value.Text = tostring(val)
+			self.callback(tostring(val))
 			for z,x in pairs(dropdown.titles) do
-				if x.Text == value then
+				if x.Text == val then
 					x.TextColor3 = dropdown.library.theme.accent
 				else
 					x.TextColor3 = Color3.fromRGB(255,255,255)
@@ -3227,7 +2629,7 @@ function sections:multibox(props)
 	local max = props.max or props.Max or props.maximum or props.Maximum or 4
 	local options = props.options or props.Options or props.Settings or props.settings or {}
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	local defstr = ""
 	if #def > 1 then
 		for i,v in pairs(def) do
@@ -3250,7 +2652,6 @@ function sections:multibox(props)
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1,0,0,35),
 			ZIndex = 2,
-			ClipsDescendants = false,
 			Parent = self.content
 		}
 	)
@@ -3372,18 +2773,15 @@ function sections:multibox(props)
 			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			BorderMode = "Inset",
 			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,0),
+			Size = UDim2.new(1,0,0,20),
 			Position = UDim2.new(0,0,0,34),
 			Visible = false,
-			ClipsDescendants = true,
-			ZIndex = 10,
 			Parent = multiboxholder
 		}
 	)
 	--
 	local size = #options
 	size = math.clamp(size,1,max)
-	local targetHeight = size * 20 + 2
 	--
 	local optionsoutline = utility.new(
 		"ScrollingFrame",
@@ -3392,7 +2790,7 @@ function sections:multibox(props)
 			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			BorderMode = "Inset",
 			BorderSizePixel = 1,
-			Size = UDim2.new(1,0,0,targetHeight),
+			Size = UDim2.new(1,0,size,2),
 			Position = UDim2.new(0,0,0,0),
 			ClipsDescendants = true,
 			CanvasSize = UDim2.new(0,0,0,18*#options),
@@ -3401,7 +2799,7 @@ function sections:multibox(props)
 			ScrollBarThickness = 5,
 			VerticalScrollBarInset = "ScrollBar",
 			VerticalScrollBarPosition = "Right",
-			ZIndex = 15,
+			ZIndex = 5,
 			Parent = optionsholder
 		}
 	)
@@ -3424,7 +2822,7 @@ function sections:multibox(props)
 		["titles"] = {},
 		["current"] = def,
 		["callback"] = callback,
-		["targetHeight"] = targetHeight
+		["tooltip"] = tooltipstr
 	}
 	--
 	table.insert(multibox.library.multiboxes,multibox)
@@ -3437,7 +2835,7 @@ function sections:multibox(props)
 				BackgroundTransparency = 1,
 				Size = UDim2.new(1,0,0,18),
 				Text = "",
-				ZIndex = 16,
+				ZIndex = 6,
 				Parent = optionsoutline
 			}
 		)
@@ -3456,7 +2854,7 @@ function sections:multibox(props)
 				TextStrokeTransparency = 0,
 				TextXAlignment = "Left",
 				ClipsDescendants = true,
-				ZIndex = 16,
+				ZIndex = 6,
 				Parent = ddoptionbutton
 			}
 		)
@@ -3472,16 +2870,16 @@ function sections:multibox(props)
 				table.insert(multibox.current,v)
 				local str = ""
 				if #multibox.current > 1 then
-					for i,v in pairs(multibox.current) do
-						if i == #multibox.current then
-							str = str..v
+					for ii,vv in pairs(multibox.current) do
+						if ii == #multibox.current then
+							str = str..vv
 						else
-							str = str..v..", "
+							str = str..vv..", "
 						end
 					end
 				else
-					for i,v in pairs(multibox.current) do
-						str = str..v
+					for ii,vv in pairs(multibox.current) do
+						str = str..vv
 					end
 				end
 				value.Text = str
@@ -3492,16 +2890,16 @@ function sections:multibox(props)
 				table.remove(multibox.current,find)
 				local str = ""
 				if #multibox.current > 1 then
-					for i,v in pairs(multibox.current) do
-						if i == #multibox.current then
-							str = str..v
+					for ii,vv in pairs(multibox.current) do
+						if ii == #multibox.current then
+							str = str..vv
 						else
-							str = str..v..", "
+							str = str..vv..", "
 						end
 					end
 				else
-					for i,v in pairs(multibox.current) do
-						str = str..v
+					for ii,vv in pairs(multibox.current) do
+						str = str..vv
 					end
 				end
 				value.Text = str
@@ -3518,38 +2916,23 @@ function sections:multibox(props)
 				v.TextColor3 = self.library.theme.accent
 			end
 		end
-		
-		if not multibox.open then
-			optionsholder.Visible = true
-			optionsholder.Size = UDim2.new(1, 0, 0, 0)
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, multibox.targetHeight)
-			}):Play()
+		optionsholder.Visible = not multibox.open
+		multibox.open = not multibox.open
+		if multibox.open then
 			indicator.Text = "-"
 		else
-			ts:Create(optionsholder, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, 0)
-			}):Play()
-			delay(0.5, function()
-				optionsholder.Visible = false
-			end)
 			indicator.Text = "+"
 		end
-		multibox.open = not multibox.open
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		dropdownbutton.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		dropdownbutton.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
+	--
+	dropdownbutton.MouseEnter:Connect(function()
+		self.library.showTooltip(multibox.tooltip)
+	end)
+	dropdownbutton.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = multibox
@@ -3562,16 +2945,6 @@ function sections:multibox(props)
 	return multibox
 end
 --
-function buttonboxs:set(value)
-	if value ~= nil then
-		local dropdown = self
-		if table.find(dropdown.options,value) then
-			self.current = tostring(value)
-			self.callback(tostring(value))
-		end
-	end
-end
---
 function multiboxs:set(tbl)
 	if tbl then
 		local multibox = self
@@ -3582,7 +2955,6 @@ function multiboxs:set(tbl)
 					table.insert(multibox.current,v)
 				end
 			end
-			--
 			for i,v in pairs(multibox.titles) do
 				if v.TextColor3 == multibox.library.theme.accent then
 					v.TextColor3 = Color3.fromRGB(255,255,255)
@@ -3591,7 +2963,6 @@ function multiboxs:set(tbl)
 					v.TextColor3 = multibox.library.theme.accent
 				end
 			end
-			--
 			local str = ""
 			if #multibox.current > 1 then
 				for i,v in pairs(multibox.current) do
@@ -3606,7 +2977,6 @@ function multiboxs:set(tbl)
 					str = str..v
 				end
 			end
-			--
 			multibox.value.Text = str
 		end
 	end
@@ -3617,7 +2987,7 @@ function sections:textbox(props)
 	local def = props.def or props.Def or props.default or props.Default or ""
 	local placeholder = props.placeholder or props.Placeholder or props.placeHolder or props.PlaceHolder or props.placeholdertext or props.PlaceHolderText or props.PlaceHoldertext or props.placeHolderText or props.placeHoldertext or props.Placeholdertext or props.PlaceholderText or props.placeholderText or ""
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	local textbox = {}
 	--
 	local textboxholder = utility.new(
@@ -3665,7 +3035,7 @@ function sections:textbox(props)
 		}
 	)
 	--
-	local gradient = utility.new(
+	utility.new(
 		"UIGradient",
 		{
 			Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(199, 191, 204)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))},
@@ -3728,11 +3098,19 @@ function sections:textbox(props)
 		["library"] = self.library,
 		["tbox"] = tbox,
 		["current"] = def,
-		["callback"] = callback
+		["callback"] = callback,
+		["tooltip"] = tooltipstr
 	}
 	--
 	button.MouseButton1Down:Connect(function()
 		tbox:CaptureFocus()
+	end)
+	--
+	button.MouseEnter:Connect(function()
+		self.library.showTooltip(textbox.tooltip)
+	end)
+	button.MouseLeave:Connect(function()
+		self.library.hideTooltip()
 	end)
 	--
 	tbox.Focused:Connect(function()
@@ -3749,19 +3127,8 @@ function sections:textbox(props)
 			table.remove(self.library.themeitems["accent"]["BorderColor3"],find)
 		end
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		button.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		button.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = textbox
@@ -3774,10 +3141,10 @@ function sections:textbox(props)
 	return textbox
 end
 --
-function textboxs:set(value)
-	self.tbox.Text = value
-	self.current = value
-	self.callback(value)
+function textboxs:set(val)
+	self.tbox.Text = val
+	self.current = val
+	self.callback(val)
 end
 --
 function sections:keybind(props)
@@ -3785,7 +3152,7 @@ function sections:keybind(props)
 	local def = props.def or props.Def or props.default or props.Default or nil
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
 	local allowed = props.allowed or props.Allowed or 1
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	--
 	local default = ".."
 	local typeis = nil
@@ -3932,7 +3299,8 @@ function sections:keybind(props)
 		["allowed"] = allowed,
 		["current"] = {typeis,utility.splitenum(def)},
 		["pressed"] = false,
-		["callback"] = callback
+		["callback"] = callback,
+		["tooltip"] = tooltipstr
 	}
 	--
 	button.MouseButton1Down:Connect(function()
@@ -3956,10 +3324,17 @@ function sections:keybind(props)
 		outline.Size = UDim2.new(0,value.TextBounds.X+20,1,0)
 	end)
 	--
-	local function turn(typeis,current)
+	button.MouseEnter:Connect(function()
+		self.library.showTooltip(keybind.tooltip)
+	end)
+	button.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
+	--
+	local function turn(typeis2,current)
 		outline.Size = UDim2.new(0,value.TextBounds.X+20,1,0)
 		keybind.down = false
-		keybind.current = {typeis,utility.splitenum(current)}
+		keybind.current = {typeis2,utility.splitenum(current)}
 		outline.BorderColor3 = Color3.fromRGB(12, 12, 12)
 		local find = table.find(self.library.themeitems["accent"]["BorderColor3"],outline)
 		if find then
@@ -3996,19 +3371,8 @@ function sections:keybind(props)
 			end
 		end
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		button.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		button.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = keybind
@@ -4067,7 +3431,7 @@ function keybinds:set(key)
 			keybind.value.Text = default
 			keybind.outline.Size = UDim2.new(0, keybind.value.TextBounds.X+20, 1, 0)
 			keybind.current = {typeis, utility.splitenum(key)}
-			keybind.callback(key) 
+			keybind.callback(key)
 
 			if keybind.down then
 				keybind.down = false
@@ -4086,7 +3450,7 @@ function sections:colorpicker(props)
 	local cpname = props.cpname or props.Cpname or props.CPname or props.CPName or props.cPname or props.cpName or props.colorpickername or nil
 	local def = props.def or props.Def or props.default or props.Default or Color3.fromRGB(255,255,255)
 	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
-	local tooltip = props.tooltip or props.Tooltip or props.tip or props.Tip or nil
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
 	--
 	local h,s,v = def:ToHSV()
 	local colorpicker = {}
@@ -4207,7 +3571,7 @@ function sections:colorpicker(props)
 		}
 	)
 	--
-	local cpcolor2 = utility.new(
+	local cpaccentcolor = utility.new(
 		"Frame",
 		{
 			AnchorPoint = Vector2.new(0.5,0),
@@ -4220,7 +3584,7 @@ function sections:colorpicker(props)
 		}
 	)
 	--
-	table.insert(self.library.themeitems["accent"]["BackgroundColor3"],cpcolor2)
+	table.insert(self.library.themeitems["accent"]["BackgroundColor3"],cpaccentcolor)
 	--
 	local cptitle = utility.new(
 		"TextLabel",
@@ -4512,7 +3876,8 @@ function sections:colorpicker(props)
 		["green"] = green[2],
 		["blue"] = blue[2],
 		["hex"] = hex[2],
-		["callback"] = callback
+		["callback"] = callback,
+		["tooltip"] = tooltipstr
 	}
 	--
 	table.insert(self.library.colorpickers,colorpicker)
@@ -4555,6 +3920,13 @@ function sections:colorpicker(props)
 		self.library:closewindows(colorpicker)
 		cpholder.Visible = not colorpicker.open
 		colorpicker.open = not colorpicker.open
+	end)
+	--
+	button.MouseEnter:Connect(function()
+		self.library.showTooltip(colorpicker.tooltip)
+	end)
+	button.MouseLeave:Connect(function()
+		self.library.hideTooltip()
 	end)
 	--
 	huebutton.MouseButton1Down:Connect(function()
@@ -4669,7 +4041,7 @@ function sections:colorpicker(props)
 	hex[2].FocusLost:Connect(function()
 		local saved = hex[2].Text
 		if #saved >= 6 and #saved <= 7 then
-			local e,s = pcall(function()
+			local e,s2 = pcall(function()
 				utility.from_hex(saved)
 			end)
 			if e == true then
@@ -4691,19 +4063,8 @@ function sections:colorpicker(props)
 			hex[3].BorderColor3 = Color3.fromRGB(12,12,12)
 		end
 	end)
-	
-	-- Tooltip
-	if tooltip then
-		button.MouseEnter:Connect(function()
-			self.library.setTooltip(tooltip)
-		end)
-		button.MouseLeave:Connect(function()
-			self.library.clearTooltip()
-		end)
-	end
 	--
 	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
-	--
 	if pointer then
 		if self.pointers then
 			self.library.pointers[tostring(pointer)] = colorpicker
@@ -4718,6 +4079,45 @@ function sections:colorpicker(props)
 	self.library.labels[#self.library.labels+1] = cptitle
 	setmetatable(colorpicker, colorpickers)
 	return colorpicker
+end
+--
+function colorpickers:set(color)
+	if color then
+		if typeof(color) == "table" then
+			color = Color3.fromRGB(color[1]*255,color[2]*255,color[3]*255)
+		end
+		local colorpicker = self
+		local h,s,v = color:ToHSV()
+		--
+		local function updateboxes()
+			colorpicker.red.PlaceholderText = "R: "..tostring(math.floor(colorpicker.current.R*255))
+			colorpicker.green.PlaceholderText = "G: "..tostring(math.floor(colorpicker.current.G*255))
+			colorpicker.blue.PlaceholderText = "B: "..tostring(math.floor(colorpicker.current.B*255))
+			colorpicker.hex.PlaceholderText = "Hex: "..utility.to_hex(colorpicker.current)
+		end
+		--
+		local function movehue()
+			colorpicker.outline3.BackgroundColor3 = Color3.fromHSV(h,1,1)
+			colorpicker.huecursor_inline.BackgroundColor3 = Color3.fromHSV(h,1,1)
+			colorpicker.hsv[1] = h
+			colorpicker.current = Color3.fromHSV(colorpicker.hsv[1],colorpicker.hsv[2],colorpicker.hsv[3])
+			colorpicker.cpcolor.BackgroundColor3 = colorpicker.current
+			colorpicker.huecursor:TweenPosition(UDim2.new(0.5,0,h,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.15,true)
+		end
+		--
+		local function movecp()
+			colorpicker.hsv[2] = s
+			colorpicker.hsv[3] = v
+			colorpicker.current = Color3.fromHSV(colorpicker.hsv[1],colorpicker.hsv[2],colorpicker.hsv[3])
+			colorpicker.cpcolor.BackgroundColor3 = colorpicker.current
+			colorpicker.cpcursor:TweenPosition(UDim2.new(s,0,1-v,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.15,true)
+		end
+		--
+		movehue()
+		movecp()
+		updateboxes()
+		colorpicker.callback(colorpicker.current)
+	end
 end
 --
 function sections:configloader(props)
@@ -4749,14 +4149,14 @@ function sections:configloader(props)
 		if isfolder(folder) then
 			for _, file in pairs(listfiles(folder)) do
 				if file:sub(-4) == ".cfg" then
-					local name = string.match(file, "[^/\\]+$"):sub(1, -5)
+					local cfgname = string.match(file, "[^/\\]+$"):sub(1, -5)
 					local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,18), Text = "", Parent = scroll})
 					local grey = utility.new("Frame", {AnchorPoint = Vector2.new(0.5,0), BackgroundColor3 = Color3.fromRGB(125, 125, 125), BackgroundTransparency = 0.8, Size = UDim2.new(1,-4,1,0), Position = UDim2.new(0.5,0,0,0), Visible = false, Parent = btn})
-					local lbl = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-10,1,0), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = btn})
-					table.insert(createdbuttons, {button=btn, grey=grey, title=lbl, name=name})
+					local lbl = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-10,1,0), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = cfgname, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = btn})
+					table.insert(createdbuttons, {button=btn, grey=grey, title=lbl, name=cfgname})
 					btn.MouseButton1Down:Connect(function()
-						for _,v in pairs(createdbuttons) do v.grey.Visible = false v.title.TextColor3 = Color3.fromRGB(255,255,255) end
-						grey.Visible = true; lbl.TextColor3 = self.library.theme.accent; selected_cfg = name
+						for _,vv in pairs(createdbuttons) do vv.grey.Visible = false vv.title.TextColor3 = Color3.fromRGB(255,255,255) end
+						grey.Visible = true; lbl.TextColor3 = self.library.theme.accent; selected_cfg = cfgname
 					end)
 				end
 			end
@@ -4780,7 +4180,265 @@ function sections:configloader(props)
 	create_btn("Delete", UDim2.new(0.5,5,0,50), function() if selected_cfg then delfile(folder.."/"..selected_cfg..".cfg"); refresh(); self.library:Notification({Title="Deleted",Description=selected_cfg}) else self.library:Notification({Title="Error",Description="Select config!"}) end end)
 
 	refresh()
-	configloader = {["library"] = self.library}; setmetatable(configloader, configloaders); return configloader 
+	configloader = {["library"] = self.library}
+	setmetatable(configloader, configloaders)
+	return configloader 
 end
-
+--
+function sections:buttonbox(props)
+	local name = props.name or props.Name or props.page or props.Page or props.pagename or props.Pagename or props.PageName or props.pageName or "new ui"
+	local def = props.def or props.Def or props.default or props.Default or ""
+	local max = props.max or props.Max or props.maximum or props.Maximum or 4
+	local options = props.options or props.Options or props.Settings or props.settings or {}
+	local callback = props.callback or props.callBack or props.CallBack or props.Callback or function()end
+	local tooltipstr = props.tooltip or props.Tooltip or "N/A"
+	local buttonbox = {}
+	--
+	local buttonboxholder = utility.new(
+		"Frame",
+		{
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1,0,0,35),
+			ZIndex = 2,
+			Parent = self.content
+		}
+	)
+	--
+	local outline = utility.new(
+		"Frame",
+		{
+			BackgroundColor3 = Color3.fromRGB(24, 24, 24),
+			BorderColor3 = Color3.fromRGB(12, 12, 12),
+			BorderMode = "Inset",
+			BorderSizePixel = 1,
+			Size = UDim2.new(1,0,0,20),
+			Position = UDim2.new(0,0,0,15),
+			Parent = buttonboxholder
+		}
+	)
+	--
+	local outline2 = utility.new(
+		"Frame",
+		{
+			BackgroundColor3 = Color3.fromRGB(24, 24, 24),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
+			BorderMode = "Inset",
+			BorderSizePixel = 1,
+			Size = UDim2.new(1,0,1,0),
+			Position = UDim2.new(0,0,0,0),
+			Parent = outline
+		}
+	)
+	--
+	local color = utility.new(
+		"Frame",
+		{
+			BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+			BorderSizePixel = 0,
+			Size = UDim2.new(1,0,1,0),
+			Position = UDim2.new(0,0,0,0),
+			Parent = outline2
+		}
+	)
+	--
+	utility.new(
+		"UIGradient",
+		{
+			Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(199, 191, 204)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))},
+			Rotation = 90,
+			Parent = color
+		}
+	)
+	--
+	local indicator = utility.new(
+		"TextLabel",
+		{
+			AnchorPoint = Vector2.new(0.5,0),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1,-10,1,0),
+			Position = UDim2.new(0.5,0,0,0),
+			Font = self.library.font,
+			Text = "+",
+			TextColor3 = Color3.fromRGB(255,255,255),
+			TextSize = self.library.textsize,
+			TextStrokeTransparency = 0,
+			TextXAlignment = "Right",
+			ClipsDescendants = true,
+			Parent = outline
+		}
+	)
+	--
+	local title = utility.new(
+		"TextLabel",
+		{
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1,0,0,15),
+			Position = UDim2.new(0,0,0,0),
+			Font = self.library.font,
+			Text = name,
+			TextColor3 = Color3.fromRGB(255,255,255),
+			TextSize = self.library.textsize,
+			TextStrokeTransparency = 0,
+			TextXAlignment = "Left",
+			Parent = buttonboxholder
+		}
+	)
+	--
+	local buttonboxbutton = utility.new(
+		"TextButton",
+		{
+			AnchorPoint = Vector2.new(0,0),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1,0,1,0),
+			Position = UDim2.new(0,0,0,0),
+			Text = "",
+			Parent = buttonboxholder
+		}
+	)
+	--
+	local optionsholder = utility.new(
+		"Frame",
+		{
+			BackgroundTransparency = 1,
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
+			BorderMode = "Inset",
+			BorderSizePixel = 1,
+			Size = UDim2.new(1,0,0,20),
+			Position = UDim2.new(0,0,0,34),
+			Visible = false,
+			Parent = buttonboxholder
+		}
+	)
+	--
+	local size = #options
+	size = math.clamp(size,1,max)
+	--
+	local optionsoutline = utility.new(
+		"ScrollingFrame",
+		{
+			BackgroundColor3 = Color3.fromRGB(56, 56, 56),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
+			BorderMode = "Inset",
+			BorderSizePixel = 1,
+			Size = UDim2.new(1,0,size,2),
+			Position = UDim2.new(0,0,0,0),
+			ClipsDescendants = true,
+			CanvasSize = UDim2.new(0,0,0,18*#options),
+			ScrollBarImageTransparency = 0.25,
+			ScrollBarImageColor3 = Color3.fromRGB(0,0,0),
+			ScrollBarThickness = 5,
+			VerticalScrollBarInset = "ScrollBar",
+			VerticalScrollBarPosition = "Right",
+			ZIndex = 5,
+			Parent = optionsholder
+		}
+	)
+	--
+	utility.new(
+		"UIListLayout",
+		{
+			FillDirection = "Vertical",
+			Parent = optionsoutline
+		}
+	)
+	--
+	buttonbox = {
+		["library"] = self.library,
+		["optionsholder"] = optionsholder,
+		["indicator"] = indicator,
+		["options"] = options,
+		["title"] = title,
+		["open"] = false,
+		["titles"] = {},
+		["current"] = def,
+		["callback"] = callback,
+		["tooltip"] = tooltipstr
+	}
+	--
+	table.insert(buttonbox.library.buttonboxs,buttonbox)
+	--
+	for i,v in pairs(options) do
+		local bboptionbutton = utility.new(
+			"TextButton",
+			{
+				AnchorPoint = Vector2.new(0,0),
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1,0,0,18),
+				Text = "",
+				ZIndex = 6,
+				Parent = optionsoutline
+			}
+		)
+		--
+		local bboptiontitle = utility.new(
+			"TextLabel",
+			{
+				AnchorPoint = Vector2.new(0.5,0),
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1,-10,1,0),
+				Position = UDim2.new(0.5,0,0,0),
+				Font = self.library.font,
+				Text = v,
+				TextColor3 = Color3.fromRGB(255,255,255),
+				TextSize = self.library.textsize,
+				TextStrokeTransparency = 0,
+				TextXAlignment = "Left",
+				ClipsDescendants = true,
+				ZIndex = 6,
+				Parent = bboptionbutton
+			}
+		)
+		--
+		self.library.labels[#self.library.labels+1] = bboptiontitle
+		table.insert(buttonbox.titles,bboptiontitle)
+		--
+		bboptionbutton.MouseButton1Down:Connect(function()
+			optionsholder.Visible = false
+			buttonbox.open = false
+			indicator.Text = "+"
+			buttonbox.current = v
+			buttonbox.callback(v)
+		end)
+	end
+	--
+	buttonboxbutton.MouseButton1Down:Connect(function()
+		buttonbox.library:closewindows(buttonbox)
+		optionsholder.Visible = not buttonbox.open
+		buttonbox.open = not buttonbox.open
+		if buttonbox.open then
+			indicator.Text = "-"
+		else
+			indicator.Text = "+"
+		end
+	end)
+	--
+	buttonboxbutton.MouseEnter:Connect(function()
+		self.library.showTooltip(buttonbox.tooltip)
+	end)
+	buttonboxbutton.MouseLeave:Connect(function()
+		self.library.hideTooltip()
+	end)
+	--
+	local pointer = props.pointer or props.Pointer or props.pointername or props.Pointername or props.PointerName or props.pointerName or nil
+	if pointer then
+		if self.pointers then
+			self.library.pointers[tostring(pointer)] = buttonbox
+		end
+	end
+	--
+	self.library.labels[#self.library.labels+1] = title
+	setmetatable(buttonbox, buttonboxs)
+	return buttonbox
+end
+--
+function buttonboxs:set(val)
+	if val ~= nil then
+		local dropdown = self
+		if table.find(dropdown.options,val) then
+			self.current = tostring(val)
+			self.callback(tostring(val))
+		end
+	end
+end
+--
 return library
