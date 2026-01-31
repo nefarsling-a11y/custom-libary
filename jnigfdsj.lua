@@ -328,7 +328,6 @@ cursorLine1.Color = color
 cursorLine1.Thickness = 1
 cursorLine1.Transparency = 0
 
-text
 
 local cursorLine2 = Drawing.new("Line")
 cursorLine2.Visible = false
@@ -704,8 +703,6 @@ local title_text = props.title or props.Title or "Notification"
 local desc_text = props.content or props.Content or props.description or props.Description or ""
 local duration = props.duration or props.time or props.Time or 5
 
-text
-
 local offset = 0
 for i, v in pairs(notifications) do
 	if v.main then offset = offset + (v.main.AbsoluteSize.Y + 6) end
@@ -717,8 +714,6 @@ local notifOutline = utility.new("Frame", {
 	Size = UDim2.new(0, 250, 0, 0), AnchorPoint = Vector2.new(1, 1), ZIndex = 9999
 })
 table.insert(self.themeitems["accent"]["BackgroundColor3"], notifOutline)
-text
-
 local notifHolder = utility.new("Frame", {
 	Parent = notifOutline, BackgroundColor3 = Color3.fromRGB(20, 20, 20), BorderSizePixel = 0,
 	Position = UDim2.new(0, 1, 0, 1), Size = UDim2.new(1, -2, 1, -2), ZIndex = 9999
@@ -1120,8 +1115,6 @@ end
 function library:saveconfig(folder_name, config_name)
 if not isfolder(folder_name) then makefolder(folder_name) end
 
-text
-
 local cfg = {}
 for cfgName, element in pairs(self.pointers) do
     if element.current ~= nil then
@@ -1150,8 +1143,6 @@ if not isfile(path) then
 self:Notification({Title="Error", Description="Config not found!"})
 return
 end
-
-text
 
 local success, err = pcall(function()
     local cfg = hs:JSONDecode(readfile(path))
