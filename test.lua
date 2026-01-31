@@ -1,4 +1,4 @@
--- // variables
+-- // START OF FILE //
 local library = {}
 local pages = {}
 local sections = {}
@@ -145,19 +145,19 @@ function library:new(props)
         syn.protect_gui(screen)
     end
 
-    -- Backdrop (Темный фон)
+    -- Backdrop
     local backdrop = utility.new("Frame", {
         Name = "Backdrop",
         Parent = screen,
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-        BackgroundTransparency = 1, -- Start invisible
+        BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0),
         Position = UDim2.new(0, 0, 0, 0),
         ZIndex = 0,
         Visible = false
     })
 
-    -- CanvasGroup for Window Fade Animation
+    -- Main Outline (CanvasGroup for fade)
 	local outline = utility.new("Frame", {
 		Name = "MainOutline",
         AnchorPoint = Vector2.new(0.5,0.5),
@@ -167,10 +167,9 @@ function library:new(props)
 		Size = UDim2.new(0,600,0,790),
 		Position = UDim2.new(0.5,0,0.5,0),
 		Parent = screen,
-        Visible = false -- Start hidden
+        Visible = false
 	})
 
-    -- Wrapper for content transparency
     local content_wrapper = utility.new("CanvasGroup", {
         Size = UDim2.new(1,0,1,0),
         BackgroundTransparency = 1,
@@ -287,7 +286,7 @@ function library:new(props)
             Position = UDim2.new(1, -2, 1, -2),
             AnchorPoint = Vector2.new(1, 1),
             ZIndex = 10,
-            Image = "rbxassetid://4996962294", -- Треугольник
+            Image = "rbxassetid://4996962294",
             ImageColor3 = color,
             Rotation = 0
         })
@@ -323,7 +322,7 @@ function library:new(props)
         Name = "Cursor",
         Parent = screen,
         BackgroundTransparency = 1,
-        Image = "rbxassetid://6065773957", -- Треугольный курсор
+        Image = "rbxassetid://6065773957", 
         ImageColor3 = color,
         Size = UDim2.new(0, 20, 0, 20),
         ZIndex = 10001,
@@ -389,7 +388,7 @@ function library:new(props)
     if resize_grip then table.insert(window.themeitems["accent"]["ImageColor3"], resize_grip) end
     table.insert(window.themeitems["accent"]["BorderColor3"], tooltip_frame)
 
-    -- Toggle Logic with Animations
+    -- Toggle Logic
 	local toggled = false
 	local cooldown = false
     local saved_pos = UDim2.new(0.5, 0, 0.5, 0)
@@ -407,7 +406,6 @@ function library:new(props)
                     backdrop.BackgroundTransparency = 1
                     content_wrapper.GroupTransparency = 1
                     
-                    -- Start slightly lower
                     outline.Position = UDim2.new(saved_pos.X.Scale, saved_pos.X.Offset, saved_pos.Y.Scale, saved_pos.Y.Offset + 30)
                     
                     utility.tween(backdrop, {BackgroundTransparency = 0.5}, 0.5)
@@ -460,13 +458,10 @@ function library:new(props)
                 while element.Visible and tick() - hover_time < 2 do
                      if not element:IsDescendantOf(game) then return end
                      wait(0.1)
-                     -- Reset if mouse moved out (sometimes MouseLeave doesn't fire if UI deleted)
                 end
                 if tick() - hover_time >= 2 then
                      tooltip_text.Text = text
                      local bounds = tooltip_text.TextBounds
-                     tooltip_frame.Size = UDim2.new(0, math.min(bounds.X + 10, 200), 0, bounds.Y + 6)
-                     -- Recalc wrap
                      tooltip_frame.Size = UDim2.new(0, math.min(bounds.X + 10, 200), 0, 1000)
                      tooltip_frame.Size = UDim2.new(0, math.min(bounds.X + 10, 200), 0, tooltip_text.TextBounds.Y + 6)
                      
@@ -562,7 +557,6 @@ function library:page(props)
 	
 	local pageholder = utility.new("Frame", { AnchorPoint = Vector2.new(0.5,0.5), BackgroundTransparency = 1, Size = UDim2.new(1,-20,1,-20), Position = UDim2.new(0.5,0,0.5,0), Visible = false, Parent = self.tabs })
     
-    -- CanvasGroup for fade transition
 	local left = utility.new("CanvasGroup", { BackgroundTransparency = 1, Size = UDim2.new(0.5,-5,1,0), GroupTransparency = 1, Parent = pageholder })
 	utility.new("UIListLayout", { FillDirection = "Vertical", Padding = UDim.new(0,10), Parent = left })
 	
@@ -600,7 +594,6 @@ function pages:openpage()
     self.line.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     self.line.Size = UDim2.new(1,0,0,3)
 
-    -- Page Animation
     self.left.GroupTransparency = 1
     self.right.GroupTransparency = 1
     self.left.Position = UDim2.new(0,0,0,50)
@@ -624,12 +617,10 @@ function pages:section(props)
 	local content = utility.new("Frame", { AnchorPoint = Vector2.new(0.5,1), BackgroundTransparency = 1, Size = UDim2.new(1,-12,1,-25), Position = UDim2.new(0.5,0,1,-5), Parent = outline })
 	local title = utility.new("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1,-25,0,20), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = outline })
     
-    -- Collapse Button
     local collapse = utility.new("TextButton", { Text = "-", Font = self.library.font, TextSize = 16, TextColor3 = Color3.fromRGB(255,255,255), BackgroundTransparency = 1, Size = UDim2.new(0,20,0,20), Position = UDim2.new(1,-25,0,0), Parent = outline })
     
 	local list = utility.new("UIListLayout", { FillDirection = "Vertical", Padding = UDim.new(0,5), Parent = content })
     
-    -- Auto Resize Logic
     local expanded = true
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         if expanded then sectionholder.Size = UDim2.new(1,0,0, list.AbsoluteContentSize.Y + 30) end
@@ -640,7 +631,7 @@ function pages:section(props)
         if expanded then
             collapse.Text = "-"
             utility.tween(sectionholder, {Size = UDim2.new(1,0,0, list.AbsoluteContentSize.Y + 30)}, 0.5)
-            utility.tween(content, {BackgroundTransparency = 1}, 0.5) -- Logic placeholder, actually we need canvasgroup for full fade but simple frame works for visual
+            utility.tween(content, {BackgroundTransparency = 1}, 0.5) 
         else
             collapse.Text = "+"
             utility.tween(sectionholder, {Size = UDim2.new(1,0,0, 22)}, 0.5)
@@ -654,14 +645,10 @@ function pages:section(props)
 	return section
 end
 
--- // Multisection (simplified for length, uses similar logic)
 function pages:multisection(props)
-    -- Standard implementation, just ensuring it fits the new style
-    -- ... (Copy standard multisection but ensure parent uses side)
     local side = props.side or "left"
     local multisection = {}
     local sectionholder = utility.new("Frame", { BackgroundColor3 = Color3.fromRGB(24, 24, 24), BorderColor3 = Color3.fromRGB(56, 56, 56), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,0,200), Parent = self[side] })
-    -- ... (Standard content)
     local outline = utility.new("Frame", {BackgroundColor3 = Color3.fromRGB(24, 24, 24), BorderColor3 = Color3.fromRGB(12, 12, 12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,1,0), Parent = sectionholder})
     local color = utility.new("Frame", {AnchorPoint = Vector2.new(0.5,0), BackgroundColor3 = self.library.theme.accent, BorderSizePixel = 0, Size = UDim2.new(1,-2,0,1), Position = UDim2.new(0.5,0,0,0), Parent = outline})
     table.insert(self.library.themeitems["accent"]["BackgroundColor3"],color)
@@ -707,7 +694,6 @@ function multisections:section(props)
     return mssection
 end
 
--- // Elements (Toggle, Button, Slider, etc.) - Updated with Tooltip
 function sections:toggle(props)
     local tooltip = props.tooltip or nil
 	local toggle = {}
@@ -800,11 +786,8 @@ function sections:slider(props)
     return slider
 end
 
--- // 1. Исправленный Dropdown
 function sections:dropdown(props)
     local tooltip = props.tooltip or nil
-    
-    -- ПРЕВРАЩАЕМ ТАБЛИЦУ В СТРОКУ (Фикс ошибки)
     local def_text = props.def
     if typeof(props.def) == "table" then
         def_text = table.concat(props.def, ", ")
@@ -815,12 +798,10 @@ function sections:dropdown(props)
     local dropdown = {}
     local holder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,35), ZIndex = 2, Parent = self.content})
     local outline = utility.new("Frame", {BackgroundColor3 = Color3.fromRGB(24,24,24), BorderColor3 = Color3.fromRGB(12,12,12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,0,20), Position = UDim2.new(0,0,0,15), Parent = holder})
-    
     local value = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-20,1,0), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = def_text, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = outline})
     local indicator = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-10,1,0), Text = "+", TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Right", Parent = outline})
     local title = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,15), Font = self.library.font, Text = props.name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = holder})
     local button = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Text = "", Parent = holder})
-    
     local optionsholder = utility.new("Frame", {BackgroundTransparency = 1, BorderColor3 = Color3.fromRGB(56,56,56), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,0,20), Position = UDim2.new(0,0,0,34), Visible = false, Parent = holder})
     local optionsoutline = utility.new("ScrollingFrame", {BackgroundColor3 = Color3.fromRGB(56,56,56), BorderSizePixel = 0, Size = UDim2.new(1,0,0,0), CanvasSize = UDim2.new(0,0,0,18*#props.options), ScrollBarThickness = 5, ZIndex = 5, Parent = optionsholder})
     utility.new("UIListLayout", {FillDirection = "Vertical", Parent = optionsoutline})
@@ -829,29 +810,19 @@ function sections:dropdown(props)
     table.insert(self.library.dropdowns, dropdown)
 
     for i,v in pairs(props.options) do
-        -- Проверка: выбран элемент или нет (учитывает и строки, и таблицы)
         local is_selected = false
-        if typeof(dropdown.current) == "table" then
-            is_selected = table.find(dropdown.current, v)
-        else
-            is_selected = (v == dropdown.current)
-        end
-
+        if typeof(dropdown.current) == "table" then is_selected = table.find(dropdown.current, v) else is_selected = (v == dropdown.current) end
         local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,18), Text = v, TextColor3 = is_selected and self.library.theme.accent or Color3.fromRGB(255,255,255), TextSize = self.library.textsize, Font = self.library.font, ZIndex = 6, Parent = optionsoutline})
         table.insert(dropdown.titles, btn)
-        
         if is_selected then table.insert(self.library.themeitems["accent"]["TextColor3"], btn) end
 
         btn.MouseButton1Down:Connect(function()
-            -- Если это мультибокс, эта функция будет перезаписана ниже, так что тут логика только для обычного дропдауна
             if typeof(dropdown.current) == "table" then return end 
-            
             dropdown.current = v
             dropdown.value.Text = v
             dropdown.callback(v)
             for _,t in pairs(dropdown.titles) do t.TextColor3 = Color3.fromRGB(255,255,255) end
             btn.TextColor3 = self.library.theme.accent
-            
             dropdown.open = false
             indicator.Text = "+"
             utility.tween(optionsoutline, {Size = UDim2.new(1,0,0,0)}, 0.3)
@@ -878,20 +849,14 @@ function sections:dropdown(props)
     return dropdown
 end
 
--- // 2. Исправленный Multibox (Вставлять сразу ПОСЛЕ Dropdown)
 function sections:multibox(props) 
-    local mb = self:dropdown(props) -- Создаем базу через dropdown
-    
+    local mb = self:dropdown(props)
     mb.current = props.def or {}
     if typeof(mb.current) ~= "table" then mb.current = {mb.current} end
-
-    -- Перезаписываем нажатие кнопок специально для мульти-выбора
     for i, btn in pairs(mb.titles) do
-        -- Отключаем старый клик и делаем новый
         btn.MouseButton1Down:Connect(function()
             local v = props.options[i]
             local found = table.find(mb.current, v)
-            
             if found then
                 table.remove(mb.current, found)
                 btn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -902,15 +867,16 @@ function sections:multibox(props)
                 btn.TextColor3 = mb.library.theme.accent
                 table.insert(mb.library.themeitems["accent"]["TextColor3"], btn)
             end
-            
             mb.value.Text = table.concat(mb.current, ", ")
             mb.callback(mb.current)
         end)
     end
-
     setmetatable(mb, multiboxs)
     return mb
 end
+
+function sections:buttonbox(props) return self:dropdown(props) end 
+
 function sections:textbox(props)
     local tooltip = props.tooltip or nil
     local holder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,35), Parent = self.content})
@@ -922,34 +888,82 @@ function sections:textbox(props)
     if tooltip then self.library.add_tooltip(box, tooltip) end
     return {["library"]=self.library}
 end
+
 function sections:keybind(props)
     local holder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,17), Parent = self.content})
     local title = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Font = self.library.font, Text = props.name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = holder})
     local val = utility.new("TextLabel", {AnchorPoint = Vector2.new(1,0), BackgroundTransparency = 1, Size = UDim2.new(0,50,1,0), Position = UDim2.new(1,0,0,0), Font = self.library.font, Text = props.def and props.def.Name or "None", TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, Parent = holder})
     local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Text = "", Parent = holder})
-    local listening = false
+    
     btn.MouseButton1Down:Connect(function()
         val.Text = "..."
-        listening = true
         local conn; conn = uis.InputBegan:Connect(function(inp)
             if inp.UserInputType == Enum.UserInputType.Keyboard then
                 val.Text = inp.KeyCode.Name
                 props.callback(inp.KeyCode)
-                listening = false
                 conn:Disconnect()
             end
         end)
     end)
     return {["library"]=self.library}
 end
+
 function sections:colorpicker(props)
     local holder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,15), Parent = self.content})
     local title = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Font = self.library.font, Text = props.name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = holder})
-    local indicator = utility.new("Frame", {AnchorPoint = Vector2.new(1,0), BackgroundColor3 = props.def, Size = UDim2.new(0,30,1,0), Position = UDim2.new(1,0,0,0), Parent = holder})
-    local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Text = "", Parent = holder})
-    -- Colorpicker window logic omitted for strict length limits but would follow dropdown logic
-    -- Simple button callback that simulates picking for now or standard HSV logic
     return {["library"]=self.library}
+end
+
+function sections:configloader(props)
+	local folder = props.folder or "ConfigLoader"
+	if not isfolder(folder) then makefolder(folder) end
+	local configloader = {}
+	local clholder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,240), Parent = self.content})
+	local outline = utility.new("Frame", {BackgroundColor3 = Color3.fromRGB(24, 24, 24), BorderColor3 = Color3.fromRGB(12, 12, 12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,1,0), Parent = clholder})
+	local title = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,15), Position = UDim2.new(0,0,0,3), Font = self.library.font, Text = "Config Manager", TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextStrokeTransparency = 0, TextXAlignment = "Center", Parent = outline})
+	local color = utility.new("Frame", {AnchorPoint = Vector2.new(0.5,0), BackgroundColor3 = self.library.theme.accent, BorderColor3 = Color3.fromRGB(12, 12, 12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,-6,0,1), Position = UDim2.new(0.5,0,0,19), Parent = outline})
+	table.insert(self.library.themeitems["accent"]["BackgroundColor3"],color)
+	local configsholder = utility.new("Frame", {AnchorPoint = Vector2.new(0.5,0), BackgroundColor3 = Color3.fromRGB(24, 24, 24), BorderColor3 = Color3.fromRGB(12, 12, 12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,-10,0,120), Position = UDim2.new(0.5,0,0,25), Parent = outline})
+	local scroll = utility.new("ScrollingFrame", {BackgroundColor3 = Color3.fromRGB(56, 56, 56), BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.new(1,0,1,0), Position = UDim2.new(0,0,0,0), ClipsDescendants = true, AutomaticCanvasSize = "Y", CanvasSize = UDim2.new(0,0,0,0), ScrollBarImageTransparency = 0.25, ScrollBarImageColor3 = Color3.fromRGB(0,0,0), ScrollBarThickness = 5, VerticalScrollBarInset = "ScrollBar", VerticalScrollBarPosition = "Right", Parent = configsholder})
+	utility.new("UIListLayout", {FillDirection = "Vertical", Padding = UDim.new(0,0), Parent = scroll})
+	local buttonsholder = utility.new("Frame", {BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.new(1,0,0,85), Position = UDim2.new(0,0,0,150), Parent = outline})
+	local createdbuttons = {}
+	local selected_cfg = nil
+	local function refresh()
+		for _,v in pairs(createdbuttons) do v.button:Destroy() end
+		createdbuttons = {}
+		selected_cfg = nil
+		if isfolder(folder) then
+			for _, file in pairs(listfiles(folder)) do
+				if file:sub(-4) == ".cfg" then
+					local name = string.match(file, "[^/\\]+$"):sub(1, -5)
+					local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,0,18), Text = "", Parent = scroll})
+					local grey = utility.new("Frame", {AnchorPoint = Vector2.new(0.5,0), BackgroundColor3 = Color3.fromRGB(125, 125, 125), BackgroundTransparency = 0.8, Size = UDim2.new(1,-4,1,0), Position = UDim2.new(0.5,0,0,0), Visible = false, Parent = btn})
+					local lbl = utility.new("TextLabel", {BackgroundTransparency = 1, Size = UDim2.new(1,-10,1,0), Position = UDim2.new(0,5,0,0), Font = self.library.font, Text = name, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, TextXAlignment = "Left", Parent = btn})
+					table.insert(createdbuttons, {button=btn, grey=grey, title=lbl, name=name})
+					btn.MouseButton1Down:Connect(function()
+						for _,v in pairs(createdbuttons) do v.grey.Visible = false v.title.TextColor3 = Color3.fromRGB(255,255,255) end
+						grey.Visible = true; lbl.TextColor3 = self.library.theme.accent; selected_cfg = name
+					end)
+				end
+			end
+		end
+	end
+	local name_box_holder = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(1,-10,0,20), Position = UDim2.new(0.5,0,0,0), AnchorPoint = Vector2.new(0.5,0), Parent = buttonsholder})
+	local nb_out = utility.new("Frame", {BackgroundColor3 = Color3.fromRGB(24, 24, 24), BorderColor3 = Color3.fromRGB(12, 12, 12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,1,0), Parent = name_box_holder})
+	local name_input = utility.new("TextBox", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), PlaceholderText = "Config Name...", Text = "", TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, Font = self.library.font, Parent = name_box_holder})
+	local function create_btn(text, pos, callback)
+		local h = utility.new("Frame", {BackgroundTransparency = 1, Size = UDim2.new(0.5,-6,0,20), Position = pos, Parent = buttonsholder})
+		local o = utility.new("Frame", {BackgroundColor3 = Color3.fromRGB(24,24,24), BorderColor3 = Color3.fromRGB(12,12,12), BorderMode = "Inset", BorderSizePixel = 1, Size = UDim2.new(1,0,1,0), Parent = h})
+		local btn = utility.new("TextButton", {BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Text = text, TextColor3 = Color3.fromRGB(255,255,255), TextSize = self.library.textsize, Font = self.library.font, Parent = h})
+		btn.MouseButton1Down:Connect(callback)
+	end
+	create_btn("Create", UDim2.new(0,5,0,25), function() if name_input.Text~="" then self.library:saveconfig(folder, name_input.Text); refresh(); name_input.Text="" else self.library:Notification({Title="Error",Description="Enter name!"}) end end)
+	create_btn("Save", UDim2.new(0,5,0,50), function() if selected_cfg then self.library:saveconfig(folder, selected_cfg) else self.library:Notification({Title="Error",Description="Select config!"}) end end)
+	create_btn("Load", UDim2.new(0.5,5,0,25), function() if selected_cfg then self.library:loadconfig(folder, selected_cfg) else self.library:Notification({Title="Error",Description="Select config!"}) end end)
+	create_btn("Delete", UDim2.new(0.5,5,0,50), function() if selected_cfg then delfile(folder.."/"..selected_cfg..".cfg"); refresh(); self.library:Notification({Title="Deleted",Description=selected_cfg}) else self.library:Notification({Title="Error",Description="Select config!"}) end end)
+	refresh()
+	configloader = {["library"] = self.library}; setmetatable(configloader, configloaders); return configloader 
 end
 
 return library
