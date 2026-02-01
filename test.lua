@@ -1666,4 +1666,3 @@ function sections:configloader(props)
 end
 
 return library
-```
