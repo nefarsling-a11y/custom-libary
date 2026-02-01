@@ -54,21 +54,6 @@ utility.new = function(instance,properties)
 	for property,value in pairs(properties) do
 		ins[property] = value
 	end
-
-	-- // FIX: Запоминаем прозрачность
-	if ins:IsA("Frame") or ins:IsA("ScrollingFrame") or ins:IsA("ImageLabel") or ins:IsA("ImageButton") or ins:IsA("TextLabel") or ins:IsA("TextBox") or ins:IsA("TextButton") then
-		if ins:IsA("Frame") or ins:IsA("ScrollingFrame") then
-			ins:SetAttribute("OriginalTransparency", ins.BackgroundTransparency)
-		elseif ins:IsA("TextLabel") or ins:IsA("TextBox") or ins:IsA("TextButton") then
-			ins:SetAttribute("OriginalTextTransparency", ins.TextTransparency)
-			ins:SetAttribute("OriginalStrokeTransparency", ins.TextStrokeTransparency)
-			ins:SetAttribute("OriginalTransparency", ins.BackgroundTransparency)
-		elseif ins:IsA("ImageLabel") or ins:IsA("ImageButton") then
-			ins:SetAttribute("OriginalImageTransparency", ins.ImageTransparency)
-			ins:SetAttribute("OriginalTransparency", ins.BackgroundTransparency)
-		end
-	end
-
 	return ins
 end
 
@@ -428,6 +413,7 @@ function library:new(props)
 	local toggled = true
 	local cooldown = false
 	local saved = outline.Position
+	local openSnapshot = {} -- Stores the state of elements before closing
 	
 	-- // TOOLTIP LOGIC
 	local function showTooltip(text, element)
@@ -483,7 +469,18 @@ function library:new(props)
 		end
 	end)
 	
-	-- // INPUT TOGGLE WINDOW (OPTIMIZED)
+	-- // OPTIMIZATION: Check active visibility
+	local function isReallyVisible(obj)
+		if not obj.Visible then return false end
+		local p = obj.Parent
+		while p and p ~= outline and p ~= screen do
+			if p:IsA("GuiObject") and not p.Visible then return false end
+			p = p.Parent
+		end
+		return true
+	end
+
+	-- // INPUT TOGGLE WINDOW (OPTIMIZED + STATE PRESERVATION)
 	uis.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.Keyboard and Input.KeyCode == window.key then
 			if cooldown == false then
@@ -498,21 +495,49 @@ function library:new(props)
 					saved = outline.Position
 					hideTooltip()
 					
+					openSnapshot = {} -- Clear old snapshot
+					
 					local targetPos = UDim2.new(saved.X.Scale, saved.X.Offset, saved.Y.Scale, saved.Y.Offset + 50)
 					
 					ts:Create(outline, tweenInfo, {Position = targetPos, BackgroundTransparency = 1}):Play()
 					ts:Create(shadow, tweenInfo, {BackgroundTransparency = 1}):Play()
 					
+					-- Capture state of ONLY visible elements and tween them
 					for _, desc in ipairs(outline:GetDescendants()) do
-						if desc:IsA("Frame") or desc:IsA("ScrollingFrame") then
-							ts:Create(desc, tweenInfo, {BackgroundTransparency = 1}):Play()
-						elseif desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
-							ts:Create(desc, tweenInfo, {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
-							if desc:IsA("TextButton") or desc:IsA("TextBox") then
-								ts:Create(desc, tweenInfo, {BackgroundTransparency = 1}):Play()
+						if desc:IsA("GuiObject") and isReallyVisible(desc) then
+							-- Save current state
+							local state = {
+								Instance = desc,
+								BackgroundTransparency = desc.BackgroundTransparency
+							}
+							
+							if desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
+								state.TextTransparency = desc.TextTransparency
+								state.TextStrokeTransparency = desc.TextStrokeTransparency
 							end
-						elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-							ts:Create(desc, tweenInfo, {ImageTransparency = 1}):Play()
+							if desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+								state.ImageTransparency = desc.ImageTransparency
+							end
+							if desc:IsA("ScrollingFrame") then
+								state.ScrollBarImageTransparency = desc.ScrollBarImageTransparency
+							end
+							
+							table.insert(openSnapshot, state)
+							
+							-- Animate to invisible
+							local tweenGoal = {BackgroundTransparency = 1}
+							if desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
+								tweenGoal.TextTransparency = 1
+								tweenGoal.TextStrokeTransparency = 1
+							end
+							if desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+								tweenGoal.ImageTransparency = 1
+							end
+							if desc:IsA("ScrollingFrame") then
+								tweenGoal.ScrollBarImageTransparency = 1
+							end
+							
+							ts:Create(desc, tweenInfo, tweenGoal):Play()
 						end
 					end
 					
@@ -532,24 +557,24 @@ function library:new(props)
 					ts:Create(outline, tweenInfo, {Position = saved, BackgroundTransparency = 0}):Play()
 					ts:Create(shadow, tweenInfo, {BackgroundTransparency = 0.5}):Play()
 					
-					for _, desc in ipairs(outline:GetDescendants()) do
-						if desc:IsA("Frame") or desc:IsA("ScrollingFrame") then
-							local orig = desc:GetAttribute("OriginalTransparency") or 0
-							ts:Create(desc, tweenInfo, {BackgroundTransparency = orig}):Play()
-							if desc:IsA("ScrollingFrame") then
-								ts:Create(desc, tweenInfo, {ScrollBarImageTransparency = 0.25}):Play()
+					-- Restore ONLY the elements that were visible when we closed
+					for _, state in ipairs(openSnapshot) do
+						local desc = state.Instance
+						if desc and desc.Parent then -- Check if it still exists
+							local tweenGoal = {BackgroundTransparency = state.BackgroundTransparency}
+							
+							if state.TextTransparency then
+								tweenGoal.TextTransparency = state.TextTransparency
+								tweenGoal.TextStrokeTransparency = state.TextStrokeTransparency
 							end
-						elseif desc:IsA("TextLabel") or desc:IsA("TextButton") or desc:IsA("TextBox") then
-							local origText = desc:GetAttribute("OriginalTextTransparency") or 0
-							local origStroke = desc:GetAttribute("OriginalStrokeTransparency") or 0
-							ts:Create(desc, tweenInfo, {TextTransparency = origText, TextStrokeTransparency = origStroke}):Play()
-							if desc:IsA("TextButton") or desc:IsA("TextBox") then
-								local origBg = desc:GetAttribute("OriginalTransparency") or 1
-								ts:Create(desc, tweenInfo, {BackgroundTransparency = origBg}):Play()
+							if state.ImageTransparency then
+								tweenGoal.ImageTransparency = state.ImageTransparency
 							end
-						elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-							local origImg = desc:GetAttribute("OriginalImageTransparency") or 0
-							ts:Create(desc, tweenInfo, {ImageTransparency = origImg}):Play()
+							if state.ScrollBarImageTransparency then
+								tweenGoal.ScrollBarImageTransparency = state.ScrollBarImageTransparency
+							end
+							
+							ts:Create(desc, tweenInfo, tweenGoal):Play()
 						end
 					end
 					
@@ -1259,7 +1284,7 @@ function multiboxs:set(tbl)
 		for i,v in pairs(tbl) do if table.find(self.options,v) then table.insert(self.current,v) end end
 		for i,v in pairs(self.titles) do
 			if v.TextColor3 == self.library.theme.accent then v.TextColor3 = Color3.fromRGB(255,255,255) end
-			if table.find(tbl,v.Text) then v.TextColor3 = self.library.theme.accent end
+			if table.find(tbl,v.Text) then v.TextColor3 = multibox.library.theme.accent end
 		end
 		local str = ""
 		if #self.current > 1 then for i,v in pairs(self.current) do if i == #self.current then str = str..v else str = str..v..", " end end else for i,v in pairs(self.current) do str = str..v end end
@@ -1557,7 +1582,7 @@ function sections:buttonbox(props)
 	local indicator = utility.new("TextLabel",{AnchorPoint = Vector2.new(0.5,0),BackgroundTransparency = 1,Size = UDim2.new(1,-10,1,0),Position = UDim2.new(0.5,0,0,0),Font = self.library.font,Text = "+",TextColor3 = Color3.fromRGB(255,255,255),TextSize = self.library.textsize,TextStrokeTransparency = 0,TextXAlignment = "Right",ClipsDescendants = true,Parent = bbOutline})
 	local bbTitle = utility.new("TextLabel",{BackgroundTransparency = 1,Size = UDim2.new(1,0,0,15),Position = UDim2.new(0,0,0,0),Font = self.library.font,Text = bbName,TextColor3 = Color3.fromRGB(255,255,255),TextSize = self.library.textsize,TextStrokeTransparency = 0,TextXAlignment = "Left",Parent = buttonboxholder})
 	local buttonboxbutton = utility.new("TextButton",{AnchorPoint = Vector2.new(0,0),BackgroundTransparency = 1,Size = UDim2.new(1,0,1,0),Position = UDim2.new(0,0,0,0),Text = "",Parent = buttonboxholder})
-	local optionsholder = utility.new("Frame",{BackgroundTransparency = 1,BorderColor3 = Color3.fromRGB(56, 56, 56),BorderMode = "Inset",BorderSizePixel = 1,Size = UDim2.new(1,0,0,0),Position = UDim2.new(0,0,0,34),Visible = false,ClipsDescendants = true,Parent = buttonboxholder})
+	local optionsholder = utility.new("Frame",{BackgroundTransparency = 1,BorderColor3 = Color3.fromRGB(56, 56, 56),BorderMode = "Inset",BorderSizePixel = 1,Size = UDim2.new(1,0,0,20),Position = UDim2.new(0,0,0,34),Visible = false,Parent = buttonboxholder})
 	local bbSize = math.clamp(#options,1,max)
 	local optionsoutline = utility.new("ScrollingFrame",{BackgroundColor3 = Color3.fromRGB(56, 56, 56),BorderColor3 = Color3.fromRGB(56, 56, 56),BorderMode = "Inset",BorderSizePixel = 1,Size = UDim2.new(1,0,bbSize,2),Position = UDim2.new(0,0,0,0),ClipsDescendants = true,CanvasSize = UDim2.new(0,0,0,18*#options),ScrollBarImageTransparency = 0.25,ScrollBarImageColor3 = Color3.fromRGB(0,0,0),ScrollBarThickness = 5,VerticalScrollBarInset = "ScrollBar",VerticalScrollBarPosition = "Right",ZIndex = 5,Parent = optionsholder})
 	utility.new("UIListLayout",{FillDirection = "Vertical",Parent = optionsoutline})
